@@ -1,0 +1,20 @@
+namespace AsyncResearch.AsyncExperiments.ChapterOne
+{
+    // Chapter 1: В какой момент выполняется "продолжение" таски? Это триггер или некий Polling механизм?
+    public static class ContinuationExample
+    {
+        public static async Task Test()
+        {
+            Console.WriteLine("Start");
+            await DoWorkAsync();
+            Console.WriteLine("End");
+        }
+        
+        public static async Task DoWorkAsync()
+        {
+            var localVariable = 42;
+            await Task.Delay(10000);
+            Console.WriteLine("Resumed with " + localVariable);
+        }
+    }
+}
