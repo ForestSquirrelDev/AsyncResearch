@@ -392,6 +392,33 @@ Console.WriteLine(string.Concat("Resumed with ", this.<localVariable>5__2.ToStri
 
 Затем мы выставим состояние стейт машины `DoWorkAsync()` в -2 (_завершено_) и обратимся к `this.<>t__builder.SetResult();`. По цепочке вызовется FinishContinuations() для всех вызывающих стейт машин: методов Test() и Main().
 
-Задача Main завершается. На этом этапе просыпается скрытая точка входа (static void <Main>), которая была заблокирована вызовом .GetAwaiter().GetResult(). Процесс завершается. (todo: вот тут поподробнее)
+Они вызываются по цепочке, ведь каждый из двух асинхронных методов `public static async Task Main(string[] args)` и `public static async Task Test()`, не смог выполниться синхронно. GetAwaiter() возвращал им незавершённый Awaiter, и стейт машина, собранная из данных методов, каждый раз упаковывалась в AsyncStateMachineBox и клалась в управляемую кучу следующим образом:
+1. Main() вызывает Test(). Метод Test создаёт новый `AsyncTaskMethodBuilderT`, у того внутри через Lazy инициализацию создаётся объект класса `Task<TResult>`. Task возвращается на вызове Test(), и у Task мы просим создать структуру `new TaskAwaiter()`: `ContinuationExample.Test().GetAwaiter()`.
+2. Затем стейт машина Main() через свой собственный `AsyncTaskMethodBuilderT` говорит: TaskAwaiter метода Test() не заввершён? Ну, пни меня, когда вот этот вот TaskAwaiter завершится - `this.<>t__builder.AwaitUnsafeOnCompleted<TaskAwaiter, Program.<Main>d__0>(ref awaiter, ref this);`, зачем собственно и передаётся ref this.
+3. Теперь Task метода Test() знает, что надо пнуть Main(), когда он завершится, ведь под капотом AsyncStateMachineBox метода main записалась в `Task.m_continuationObject` метода Test().
+4. Test(), в свою очередь, вызывает DoWorkAsync(). Тот тоже возвращает ему TaskAwaiter, и стейт машина Test() тоже просит пнуть её через `m_continuationObject`, когда Task метода DoWorkAsync() завершится.
+5. Теперь таска, созданная внутри стейт машины, DoWorkAsync() знает, что надо пнуть Test().
+6. В обратную сторону этот процесс работает так же: таска Delay(), созданная внутри стейт машины DoWorkAsync(), завершается. Смотрит в свой `m_continuationObject`. Там лежит AsyncStateMachineBox `DoWorkAsync`. Вызывается `DoWorkAsync.MoveNext()`: 
+````
+...
+try // TaskContinuation.cs, CS: 792
+{
+   if (prevCurrentTask != null) currentTask = null;
+   box.MoveNext();
+}
+...
+````
+7. DoWorkAsync() завершает своё исполнение, ставит себе стейт в -2, и вызывает `this.<>t__builder.SetResult()`.
+8. SetResult() вызывает Task.RunContinuations(), тот видит что в `m_continuationObject` лежит Test(), и вызывает уже у её коробки MoveNext().
+9. Тот дописывает в консоль "End", и аналогичным образом через SetResult() вызывает AsyncStateMachineBox уже для метода Main().
 
-// что происходило в родительских стейт машинах, и как выполнится цепочка вызовов?
+Main() завершается. На этом этапе просыпается скрытая точка входа (`static void <Main>`), которая была заблокирована вызовом `GetAwaiter().GetResult()`:
+
+````
+[SpecialName]
+private static void <Main>([Nullable(1)] string[] args)
+{
+    Program.Main(args).GetAwaiter().GetResult();
+}
+````
+Процесс завершается.
