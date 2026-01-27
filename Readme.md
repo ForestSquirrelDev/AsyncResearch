@@ -8,3 +8,6 @@
 - Chapter 8: Что будет если объект, создавший стейт машину и ждущий Continuation, станет Eligible For GC (на него ни у кого не осталось ссылок)?
 - Chapter 9: В каких случаях стак трейс поебется, а в каких нет?
 - Chapter 10: Когда мы говорим об аллокациях на Стейт машину, о каких размерах вообще идёт речь?
+- Chapter 11: Where (in what context) does the state machine for an async void task get created, and why is it the "Hand grenade" of C#?
+- Chapter 12: Как в асинхронных стейт машинах обрабатываются исключения, кто их ловит, и что будет если их не ловить?
+- Chapter 13: В каких случаях поебётся стак трейс исключения?
