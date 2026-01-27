@@ -1,4 +1,5 @@
 ﻿using AsyncResearch.AsyncExperiments.ChapterOne;
+using AsyncResearch.AsyncExperiments.ChapterTwo_AnatomyOfCrash;
 
 namespace AsyncResearch
 {
@@ -6,7 +7,7 @@ namespace AsyncResearch
     {
         public static async Task Main(string[] args)
         {
-            await ContinuationExample.Test();
+            await AsyncTryCatchExample.Test();
             Console.WriteLine("Hello, World!");
         }
     }
