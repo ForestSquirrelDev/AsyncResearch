@@ -1,13 +1,12 @@
-﻿using AsyncResearch.AsyncExperiments.ChapterOne;
-using AsyncResearch.AsyncExperiments.ChapterTwo_AnatomyOfCrash;
+﻿using AsyncResearch.AsyncExperiments.Chapter_2_AnatomyOfCrash;
 
 namespace AsyncResearch
 {
     public class Program
     {
-        public static async Task Main(string[] args)
+        public static void Main(string[] args)
         {
-            await AsyncTryCatchExample.Test();
+            UnobservedTaskExceptionExample.TestCaller();
             Console.WriteLine("Hello, World!");
         }
     }

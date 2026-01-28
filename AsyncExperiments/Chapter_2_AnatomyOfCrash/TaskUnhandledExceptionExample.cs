@@ -1,6 +1,6 @@
-﻿namespace AsyncResearch.AsyncExperiments.ChapterTwo_AnatomyOfCrash
+﻿namespace AsyncResearch.AsyncExperiments.Chapter_2_AnatomyOfCrash
 {
-    public class AsyncTryCatchExample
+    public class TaskUnhandledExceptionExample
     {
         public static async Task Test()
         {
