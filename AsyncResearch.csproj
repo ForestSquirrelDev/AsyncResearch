@@ -7,4 +7,8 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <Folder Include="AsyncExperiments\Chapter_3_SynchronizationContext\" />
+    </ItemGroup>
+
 </Project>
