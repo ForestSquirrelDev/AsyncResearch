@@ -4,9 +4,9 @@ namespace AsyncResearch
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
-            UnobservedTaskExceptionExample.TestCaller();
+            await TaskUnhandledExceptionExample.Test();
             Console.WriteLine("Hello, World!");
         }
     }
