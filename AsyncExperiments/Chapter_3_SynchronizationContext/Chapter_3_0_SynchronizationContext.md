@@ -63,3 +63,57 @@ case TaskContinuation tc: // Task.cs, CS: 3488
     LogFinishCompletionNotification();
     return;
 ````
+
+````
+So i have a stack trace like this: 
+AwaitTaskContinuation.RunCallback() at C:/Users/16K/AppData/Roaming/JetBrains/Rider2025.1/resharper-host/SourcesCache/b86cdfe19de105ff2eab7d5d4c613fd91b9adfe4f95bd82e2d6db593e6d3ca3/TaskContinuation.cs:line 697
+Task.RunContinuations() [3]
+Task<VoidTaskResult>.TrySetResult() [2]
+UnwrapPromise<VoidTaskResult>.TrySetFromTask()
+UnwrapPromise<VoidTaskResult>.Invoke()
+Task.RunContinuations() [2]
+Task<VoidTaskResult>.TrySetResult() [1]
+AsyncTaskMethodBuilder<VoidTaskResult>.SetExistingTaskResult()
+AsyncTaskMethodBuilder.SetResult()
+async SynchronizationContextExample.<>c.<DoWork>b__1_0() at D:/work/AsyncResearch/AsyncExperiments/Chapter_3_SynchronizationContext/SynchronizationContextExample.cs:line 28
+AsyncTaskMethodBuilder<VoidTaskResult>.AsyncStateMachineBox<SynchronizationContextExample.<>c.<<DoWork>b__1_0>d>.ExecutionContextCallback()
+ExecutionContext.RunInternal()
+AsyncTaskMethodBuilder<VoidTaskResult>.AsyncStateMachineBox<SynchronizationContextExample.<>c.<<DoWork>b__1_0>d>.MoveNext()
+AsyncTaskMethodBuilder<VoidTaskResult>.AsyncStateMachineBox<SynchronizationContextExample.<>c.<<DoWork>b__1_0>d>.MoveNext()
+AwaitTaskContinuation.RunOrScheduleAction()
+Task.RunContinuations() [1]
+Task.TrySetResult()
+Task.DelayPromise.CompleteTimedOut()
+TimerQueueTimer.Fire()
+TimerQueue.FireNextTimers()
+ThreadPoolWorkQueue.Dispatch()
+PortableThreadPool.WorkerThread.WorkerThreadStart()
+[Native to Managed Transition]
+
+Callback is a ContextCallback. So it invokes AsyncStateMachineBox that was on the heap waiting to be called by a Timer Thread. DelayPromise fires and invoke async state machine box. It calls SetResult. SetResult triggers TaskContinuation. TaskContinuation is SynchronizationContextAwaitTaskContinuation. Because SynchronizationContextAwaitTaskContinuation is inherited from TaskContinuation, it overrides Run. So taskContinuation.Run() gets called in my stack trace. SynchronizationContextAwaitTaskContinuation does this: 
+
+internal sealed override void Run(Task task, bool canInlineContinuationTask)
+{
+    // If we're allowed to inline, run the action on this thread.
+    if (canInlineContinuationTask &&
+        m_syncContext == SynchronizationContext.Current)
+    {
+        RunCallback(GetInvokeActionCallback(), m_action, ref Task.t_currentTask);
+    }
+    // Otherwise, Post the action back to the SynchronizationContext.
+    else
+    {
+        TplEventSource log = TplEventSource.Log;
+        if (log.IsEnabled())
+        {
+            m_continuationId = Task.NewId();
+            log.AwaitTaskContinuationScheduled((task.ExecutingTaskScheduler ?? TaskScheduler.Default).Id, task.Id, m_continuationId);
+        }
+        RunCallback(GetPostActionCallback(), this, ref Task.t_currentTask);
+    }
+    // Any exceptions will be handled by RunCallback.
+}
+
+
+In Run it does RunCallback, with s_postCallback just being basically a delegate that accepts an object, casts it to Action and invokes. And so the run invokes this PostAction. PostAction finally schedules s_postCallback to SimpleManualContext. It schedules c.m_syncContext.Post(s_postCallback, c.m_action) in TaskContinuation: i.e. it passes action (MoveNext of DoWork state machine), and it passes a contract on how to invoke this action: SendOrPostCallback, which basically just invokes action. And so the MoveNext is posted to my simple context 
+````
