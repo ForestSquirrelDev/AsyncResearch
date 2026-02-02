@@ -1,13 +1,13 @@
-﻿using AsyncResearch.AsyncExperiments.Chapter_2_AnatomyOfCrash;
+﻿using AsyncResearch.AsyncExperiments.Chapter_3_SynchronizationContext;
 
 namespace AsyncResearch
 {
     public class Program
     {
-        public static async Task Main(string[] args)
+        public static Task Main(string[] args)
         {
-            await TaskUnhandledExceptionExample.Test();
-            Console.WriteLine("Hello, World!");
+            SynchronizationContextExample.Run();
+            return Task.CompletedTask;
         }
     }
 }
