@@ -28,8 +28,8 @@ if (SynchronizationContext.Current is SynchronizationContext syncCtx && syncCtx.
 }
 ````
 
-То есть по Continuation'ам будет гулять уже не `IAsyncStateMachineBox`, а `TaskContinuation`. В результате, когда у таска вызовется TrySetResult, мы попадём не напрямую в IAsyncStateMachineBox.MoveNext(),
-а в TaskContinuation:
+То есть по Continuation'ам будет гулять уже не `IAsyncStateMachineBox`, а `TaskContinuation`. В результате, когда у таска вызовется `TrySetResult`, мы попадём не напрямую в `IAsyncStateMachineBox.MoveNext()`,
+а в `TaskContinuation`:
 
 ````
 switch (continuationObject) // Task.cs, CS: 3470
@@ -84,7 +84,30 @@ PortableThreadPool.WorkerThread.WorkerThreadStart()
 ````
 
 По стак трейсу мы можем наблюдать, что в `TrySetResult` мы попали в `RunContinuations`, а тот, видя, что `m_continuationObject` у таска - это `SynchronizationContextAwaitTaskContinuation`,
-вызывает `internal sealed override void Run(Task task, bool canInlineContinuationTask)` класса `SynchronizationContextAwaitTaskContinuation`.
+вызывает `internal sealed override void Run(Task task, bool canInlineContinuationTask)` класса `SynchronizationContextAwaitTaskContinuation`:
+````
+internal sealed override void Run(Task task, bool canInlineContinuationTask) // TaskContinuation.cs, CS: 392
+{
+    // If we're allowed to inline, run the action on this thread.
+    if (canInlineContinuationTask &&
+        m_syncContext == SynchronizationContext.Current)
+    {
+        RunCallback(GetInvokeActionCallback(), m_action, ref Task.t_currentTask);
+    }
+    // Otherwise, Post the action back to the SynchronizationContext.
+    else
+    {
+        TplEventSource log = TplEventSource.Log;
+        if (log.IsEnabled())
+        {
+            m_continuationId = Task.NewId();
+            log.AwaitTaskContinuationScheduled((task.ExecutingTaskScheduler ?? TaskScheduler.Default).Id, task.Id, m_continuationId);
+        }
+        RunCallback(GetPostActionCallback(), this, ref Task.t_currentTask);
+    }
+    // Any exceptions will be handled by RunCallback.
+}
+````
 
 Далее - вызывается RunCallback(), куда передаётся:
 1. `s_postActionCallback`. Данный делегат - это по сути инструкция к `SynchronizationContext`: Post. Метод говорит контексту синхронизации: что положить (`m_action`), и как это вызвать (`s_postCallback` - инструкция по вызову `Action`).
