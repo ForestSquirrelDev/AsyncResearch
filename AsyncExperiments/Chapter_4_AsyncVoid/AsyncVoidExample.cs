@@ -1,8 +1,7 @@
-namespace AsyncResearch.AsyncExperiments.ChapterEleven
+namespace AsyncResearch.AsyncExperiments.Chapter_4_AsyncVoid
 {
     public static class AsyncVoidExample
     {
-        // Chapter 11: Where (in what context) does the state machine for an async void task get created, and why is it the "Hand grenade" of C#?
         public static void Test()
         {
             Console.WriteLine("Start");
