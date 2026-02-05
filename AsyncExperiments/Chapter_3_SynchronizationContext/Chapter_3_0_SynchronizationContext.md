@@ -56,17 +56,9 @@ switch (continuationObject) // Task.cs, CS: 3470
 }
 ````
 
-Т.к. мы `TaskContinuation`, мы попадаем сюда:
+Полный стактрейс будет выглядеть следующим образом:
 ````
-case TaskContinuation tc: // Task.cs, CS: 3488
-    tc.Run(this, canInlineContinuations);
-    LogFinishCompletionNotification();
-    return;
-````
-
-````
-So i have a stack trace like this: 
-AwaitTaskContinuation.RunCallback() at C:/Users/16K/AppData/Roaming/JetBrains/Rider2025.1/resharper-host/SourcesCache/b86cdfe19de105ff2eab7d5d4c613fd91b9adfe4f95bd82e2d6db593e6d3ca3/TaskContinuation.cs:line 697
+SynchronizationContextAwaitTaskContinuation.Run() at C:/Users/User/AppData/Roaming/JetBrains/Rider2024.3/resharper-host/SourcesCache/b86cdfe19de105ff2eab7d5d4c613fd91b9adfe4f95bd82e2d6db593e6d3ca3/TaskContinuation.cs:line 395
 Task.RunContinuations() [3]
 Task<VoidTaskResult>.TrySetResult() [2]
 UnwrapPromise<VoidTaskResult>.TrySetFromTask()
@@ -75,7 +67,7 @@ Task.RunContinuations() [2]
 Task<VoidTaskResult>.TrySetResult() [1]
 AsyncTaskMethodBuilder<VoidTaskResult>.SetExistingTaskResult()
 AsyncTaskMethodBuilder.SetResult()
-async SynchronizationContextExample.<>c.<DoWork>b__1_0() at D:/work/AsyncResearch/AsyncExperiments/Chapter_3_SynchronizationContext/SynchronizationContextExample.cs:line 28
+async SynchronizationContextExample.<>c.<DoWork>b__1_0() at C:/work/AsyncResearch/AsyncExperiments/Chapter_3_SynchronizationContext/SynchronizationContextExample.cs:line 28
 AsyncTaskMethodBuilder<VoidTaskResult>.AsyncStateMachineBox<SynchronizationContextExample.<>c.<<DoWork>b__1_0>d>.ExecutionContextCallback()
 ExecutionContext.RunInternal()
 AsyncTaskMethodBuilder<VoidTaskResult>.AsyncStateMachineBox<SynchronizationContextExample.<>c.<<DoWork>b__1_0>d>.MoveNext()
@@ -89,31 +81,75 @@ TimerQueue.FireNextTimers()
 ThreadPoolWorkQueue.Dispatch()
 PortableThreadPool.WorkerThread.WorkerThreadStart()
 [Native to Managed Transition]
+````
 
-Callback is a ContextCallback. So it invokes AsyncStateMachineBox that was on the heap waiting to be called by a Timer Thread. DelayPromise fires and invoke async state machine box. It calls SetResult. SetResult triggers TaskContinuation. TaskContinuation is SynchronizationContextAwaitTaskContinuation. Because SynchronizationContextAwaitTaskContinuation is inherited from TaskContinuation, it overrides Run. So taskContinuation.Run() gets called in my stack trace. SynchronizationContextAwaitTaskContinuation does this: 
+По стак трейсу мы можем наблюдать, что в `TrySetResult` мы попали в `RunContinuations`, а тот, видя, что `m_continuationObject` у таска - это `SynchronizationContextAwaitTaskContinuation`,
+вызывает `internal sealed override void Run(Task task, bool canInlineContinuationTask)` класса `SynchronizationContextAwaitTaskContinuation`.
 
-internal sealed override void Run(Task task, bool canInlineContinuationTask)
+Далее - вызывается RunCallback(), куда передаётся:
+1. `s_postActionCallback`. Данный делегат - это по сути инструкция к `SynchronizationContext`: Post. Метод говорит контексту синхронизации: что положить (`m_action`), и как это вызвать (`s_postCallback` - инструкция по вызову `Action`).
+2. `this`, т.е. себя - `SynchronizationContextAwaitTaskContinuation`.
+3. Текущий `Task` потока.
+
+Внутри метода, под try-catch, вызывается ContextCallback, т.е. метод PostAction:
+````
+private static void PostAction(object? state) // TaskContinuation.cs, CS: 416
 {
-    // If we're allowed to inline, run the action on this thread.
-    if (canInlineContinuationTask &&
-        m_syncContext == SynchronizationContext.Current)
+    Debug.Assert(state is SynchronizationContextAwaitTaskContinuation);
+    var c = (SynchronizationContextAwaitTaskContinuation)state;
+
+    TplEventSource log = TplEventSource.Log;
+    if (log.IsEnabled() && log.TasksSetActivityIds && c.m_continuationId != 0)
     {
-        RunCallback(GetInvokeActionCallback(), m_action, ref Task.t_currentTask);
+        c.m_syncContext.Post(s_postCallback, GetActionLogDelegate(c.m_continuationId, c.m_action));
     }
-    // Otherwise, Post the action back to the SynchronizationContext.
     else
     {
-        TplEventSource log = TplEventSource.Log;
-        if (log.IsEnabled())
-        {
-            m_continuationId = Task.NewId();
-            log.AwaitTaskContinuationScheduled((task.ExecutingTaskScheduler ?? TaskScheduler.Default).Id, task.Id, m_continuationId);
-        }
-        RunCallback(GetPostActionCallback(), this, ref Task.t_currentTask);
+        c.m_syncContext.Post(s_postCallback, c.m_action);
     }
-    // Any exceptions will be handled by RunCallback.
 }
-
-
-In Run it does RunCallback, with s_postCallback just being basically a delegate that accepts an object, casts it to Action and invokes. And so the run invokes this PostAction. PostAction finally schedules s_postCallback to SimpleManualContext. It schedules c.m_syncContext.Post(s_postCallback, c.m_action) in TaskContinuation: i.e. it passes action (MoveNext of DoWork state machine), and it passes a contract on how to invoke this action: SendOrPostCallback, which basically just invokes action. And so the MoveNext is posted to my simple context 
 ````
+
+И Post попадёт в наш `SimpleManualContext`:
+````
+public override void Post(SendOrPostCallback d, object? state) // SimpleManualContext.cs, CS: 10
+{
+    lock (_queue)
+    {
+        Console.WriteLine($"[SimpleManualContext] Post {d.Method.Name}, state {state}");
+        _queue.Add((d, state));
+    }
+}
+````
+
+Поскольку мы сделали наш контекст "однопоточным", мы выполним Post через `lock`: таким образом, сколько угодно тасок могут класть результат в Post - они все упадут в очередь синхронно в одном потоке.
+
+В дальнейшем мы вызовем `ExecuteTasks` в нашем "главном" потоке, и все таски, положившие свой результат (`MoveNext`) в очередь `_currentTickCallbacks`, выполнятся синхронно, в одном потоке:
+````
+public void ExecuteTasks() // SimpleManualContext.cs, CS: 19
+{
+    if (Environment.CurrentManagedThreadId != _mainThreadId)
+    {
+        throw new InvalidOperationException("ExecuteTasks can only be called from the main thread.");
+    }
+
+    lock (_queue)
+    {
+        _currentTickCallbacks.AddRange(_queue);
+        _queue.Clear();
+    }
+
+    foreach (var work in _currentTickCallbacks)
+    {
+        work.callback(work.state);
+    }
+
+    _currentTickCallbacks.Clear();
+}
+````
+
+Таким образом, если бы мы были UI-приложением, мы могли бы безопасно завершить асинхронные стейт машины не из тех потоков, где они выполнились, а в главном потоке.
+При этом преимущества многопоточного кода сохраняются: таска может выполняться в каком угодно потоке (как видно в примере с потоком таймера) - она просто вернёт результат в нужный нам, "главный" поток.
+
+Получается, что `SynchronizationContext` — это не ограничение многопоточности, это контролируемое слияние потоков. Bottleneck в `SimpleManualContext` будет только в том случае, если асинхронные стейт машины
+будут выполнять логику после `await`, т.е. в главном потоке.
