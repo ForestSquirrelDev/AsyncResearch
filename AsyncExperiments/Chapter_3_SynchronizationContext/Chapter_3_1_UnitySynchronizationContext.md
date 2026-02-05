@@ -49,10 +49,40 @@ ThreadPoolWorkQueue.Dispatch()
 _ThreadPoolWaitCallback.PerformWaitCallback()
 ````
 
+В разные моменты в течение `PlayerLoop`, C++ часть движка вызывает метод `ExecuteTasks`:
+````
+[RequiredByNativeCode]
+private static void ExecuteTasks() // UnitySynchronizationContext.cs, CS: 94
+{
+  if (!(SynchronizationContext.Current is UnitySynchronizationContext current))
+    return;
+  current.Exec();
+}
+````
 
+И мы начнём в главном потоке юнити выполнять коллбэки тасок, которые ранее упали в очередь:
+````
+public void Exec() // UnitySynchronizationContext.cs, CS: 70
+{
+  lock (this.m_AsyncWorkQueue)
+  {
+    this.m_CurrentFrameWork.AddRange((IEnumerable<UnitySynchronizationContext.WorkRequest>) this.m_AsyncWorkQueue);
+    this.m_AsyncWorkQueue.Clear();
+  }
+  while (this.m_CurrentFrameWork.Count > 0)
+  {
+    UnitySynchronizationContext.WorkRequest workRequest = this.m_CurrentFrameWork[0];
+    this.m_CurrentFrameWork.RemoveAt(0);
+    workRequest.Invoke();
+  }
+}
+````
 
-Из интересного - `Exec` вызывается не один раз за PlayerLoop. Как [пишут](https://discussions.unity.com/t/why-await-resumes-on-the-main-thread-in-unity-synchronizationcontext/1700147) сами юнитеки, он вызывается несколько раз в течение PlayerLoop:
+`Exec` вызывается не один раз за PlayerLoop. Как [пишут](https://discussions.unity.com/t/why-await-resumes-on-the-main-thread-in-unity-synchronizationcontext/1700147) сами юнитеки, он вызывается несколько раз в течение PlayerLoop:
 `Unity then processes this queue at specific points during the Unity PlayerLoop. In other words, they are executed as part of Unity’s normal frame update cycle.`
 
 Однако, как правило async continuations всё равно выполняются в следующем кадре:
 `Because async continuations are queued and later flushed from the PlayerLoop, they are typically executed on the next frame. This is the root cause of the commonly observed “one-frame delay” in Unity async code.`
+
+В результате асинхронная стейт машина завершится в основном потоке, и весь код после 'await' тоже будет выполнен в главном потоке. Что позволяет Unity не ограничивать вызов нативных функций движка в асинхронных методах
+
