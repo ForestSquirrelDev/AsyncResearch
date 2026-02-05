@@ -1,4 +1,4 @@
-namespace AsyncResearch.AsyncExperiments.ChapterOne
+namespace AsyncResearch.AsyncExperiments.Chapter_1_HeartOfTheStateMachine
 {
     // Chapter 1: В какой момент выполняется "продолжение" таски? Это триггер или некий Polling механизм?
     public static class ContinuationExample
