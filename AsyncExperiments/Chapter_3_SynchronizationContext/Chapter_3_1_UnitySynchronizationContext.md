@@ -1,5 +1,3 @@
-// в каком этапе кадра вызывается exec синхронизационного контекста?
-
 `UnitySynchronizationContext` - это хороший пример того, когда может понадобиться SynchronizationContext.
 Большая часть кода движка Unity не потокобезопасна, поэтому разработчики движка запрещают его выполнение из других потоков. 
 
@@ -89,5 +87,29 @@ public void Exec() // UnitySynchronizationContext.cs, CS: 70
 В отличие от примера с `SimpleManualContext`, Unity переопределяет метод `Send()` у `SynchronizationContext`.
 `Task` никогда не вызовет этот метод - он всегда использует `Post(...)`.
 
-Но какие-то сторонние библиотеки, плагины, либо С++ движок Unity могут вызвать Send(). Этот метод предполагает блокирующее выполнение всех коллбеков, лежащих в очереди.
-Когда `UnitySynchronizationContext` просят сделать `Send()`, он проверяет, в каком потоке находится. Если это главный поток 
+Но какие-то сторонние библиотеки, плагины, либо С++ движок Unity могут вызвать Send(). Этот метод предполагает блокирующее выполнение коллбека, переданного в метод `Send(...)`.
+Когда `UnitySynchronizationContext` просят сделать `Send()`, он проверяет, в каком потоке находится. Если это главный поток - коллбэк сразу вызывается.
+
+Но если метод вызвали не из главного потока, он останавливает этот поток до тех пор, пока callback не будет вызван главным потоком, когда тот будет разбирать очередь `m_AsyncWorkQueue`:
+````
+public override void Send(SendOrPostCallback callback, object state) // UnitySynchronizationContext.cs, CS: 38
+{
+  // Если мы уже в главном потоке, выполни сразу
+  if (this.m_MainThreadID == Thread.CurrentThread.ManagedThreadId)
+  {
+    callback(state);
+  }
+  // Если не в главном - заблокируй поток, из которого вызвали Send, до тех пор пока главный поток не доберётся до этого коллбека у себя в очереди
+  else
+  {
+    using (ManualResetEvent waitHandle = new ManualResetEvent(false))
+    {
+      lock (this.m_AsyncWorkQueue)
+        this.m_AsyncWorkQueue.Add(new UnitySynchronizationContext.WorkRequest(callback, state, waitHandle));
+      waitHandle.WaitOne();
+    }
+  }
+}
+````
+
+Если бы в предыдущем примере с `SimpleManualContext` мы на самом деле были UI-приложением, отсутствие "однопоточной" реализации `Send` приводило бы нас к непредсказуемым последствиям.
