@@ -84,5 +84,5 @@ public void Exec() // UnitySynchronizationContext.cs, CS: 70
 Однако, как правило async continuations всё равно выполняются в следующем кадре:
 `Because async continuations are queued and later flushed from the PlayerLoop, they are typically executed on the next frame. This is the root cause of the commonly observed “one-frame delay” in Unity async code.`
 
-В результате асинхронная стейт машина завершится в основном потоке, и весь код после 'await' тоже будет выполнен в главном потоке. Что позволяет Unity не ограничивать вызов нативных функций движка в асинхронных методах
+В результате асинхронная стейт машина завершится в основном потоке, и весь код после 'await' тоже будет выполнен в главном потоке. Что позволяет Unity не ограничивать вызов нативных функций движка в асинхронных методах.
 
