@@ -98,3 +98,34 @@ _builder.SetResult(); // AsyncVoidMethodBuilder.cs, CS: 99
 ````
 
 #### Третье - `SetException()`.
+
+В отличие от `AsyncTaskMethodBuilder`, `AsyncVoidMethodBuilder` не сохраняет исключение внутрь `Task`, чтобы вызывающий сам решил, как и когда ему обрабатывать
+(или не обрабатывать) лежащее там исключение.
+
+`AsyncVoidMethodBuilder` сразу пытается выбросить исключение: и делает он это, в зависимости от наличия `SynchronizationContext`- либо прямо в контекст:
+````
+SynchronizationContext? context = _synchronizationContext; AsyncVoidMethodBuilder.cs, CS: 123
+if (context != null)
+{
+    // and decrement its outstanding operation count.
+    try
+    {
+        Task.ThrowAsync(exception, targetContext: context);
+    }
+    finally
+    {
+        NotifySynchronizationContextOfCompletion(context);
+    }
+}
+````
+
+Либо в ThreadPool:
+````
+ThreadPool.QueueUserWorkItem(static state => ((ExceptionDispatchInfo)state!).Throw(), edi); // Task.cs, CS: 1929
+````
+
+Как пишут сами разработчики .NET, `This will result in a crash unless legacy exception behavior is enabled by a config file or a CLR host.`
+
+При этом вне зависимости от того, куда было проброшено исключение, у внутреннено `AsyncTaskMethodBuilder` также будет вызван SetResult().
+
+В результате выходит что `async void` - это хитрое переиспользование Task с сигнатурой `void`, и более агрессивным выбросом исключений.
