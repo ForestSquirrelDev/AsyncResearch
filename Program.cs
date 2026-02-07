@@ -1,23 +1,12 @@
-﻿using AsyncResearch.AsyncExperiments.Chapter_4_AsyncVoid;
+﻿using AsyncResearch.AsyncExperiments.Chapter_X_Additionals;
 
 namespace AsyncResearch
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
-            AppDomain.CurrentDomain.UnhandledException += (sender, e) => 
-            {
-                Console.WriteLine($"\nCLR Caught unhandled exception!");
-                Console.WriteLine($"Is process terminating? {e.IsTerminating}");
-                Console.WriteLine($"Error: '{((Exception)e.ExceptionObject).Message}'");
-            };
-            ThreadPoolException.Test();
-            while (true)
-            {
-                Console.WriteLine("Hello World!");
-                Thread.Sleep(100);
-            }
+            await ForceYieldingInfiniteLoopExample.Test();
         }
     }
 }
