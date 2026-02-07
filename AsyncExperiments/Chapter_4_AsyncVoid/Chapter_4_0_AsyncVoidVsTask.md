@@ -119,13 +119,11 @@ if (context != null)
 }
 ````
 
-Либо в ThreadPool:
+Либо в `ThreadPool`:
 ````
 ThreadPool.QueueUserWorkItem(static state => ((ExceptionDispatchInfo)state!).Throw(), edi); // Task.cs, CS: 1929
 ````
 
 Как пишут сами разработчики .NET, `This will result in a crash unless legacy exception behavior is enabled by a config file or a CLR host.`
 
-При этом вне зависимости от того, куда было проброшено исключение, у внутреннено `AsyncTaskMethodBuilder` также будет вызван SetResult().
-
-В результате выходит что `async void` - это хитрое переиспользование Task с сигнатурой `void`, и более агрессивным выбросом исключений.
+Получается, что `async void` - это хитрое переиспользование `Task`, только с сигнатурой `void`, и более агрессивным выбросом исключений.

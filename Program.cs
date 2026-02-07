@@ -1,13 +1,23 @@
-﻿using AsyncResearch.AsyncExperiments.Chapter_3_SynchronizationContext;
+﻿using AsyncResearch.AsyncExperiments.Chapter_4_AsyncVoid;
 
 namespace AsyncResearch
 {
     public class Program
     {
-        public static Task Main(string[] args)
+        public static void Main(string[] args)
         {
-            SynchronizationContextExample.Run();
-            return Task.CompletedTask;
+            AppDomain.CurrentDomain.UnhandledException += (sender, e) => 
+            {
+                Console.WriteLine($"\nCLR Caught unhandled exception!");
+                Console.WriteLine($"Is process terminating? {e.IsTerminating}");
+                Console.WriteLine($"Error: '{((Exception)e.ExceptionObject).Message}'");
+            };
+            ThreadPoolException.Test();
+            while (true)
+            {
+                Console.WriteLine("Hello World!");
+                Thread.Sleep(100);
+            }
         }
     }
 }
