@@ -11,7 +11,6 @@
         {
             lock (_queue)
             {
-                Console.WriteLine($"[SimpleManualContext] Post {d.Method.Name}, state {state}");
                 _queue.Add((d, state));
             }
         }
@@ -29,12 +28,13 @@
                 _queue.Clear();
             }
 
-            foreach (var work in _currentTickCallbacks)
+            var callbacksCopy = _currentTickCallbacks.ToList();
+            _currentTickCallbacks.Clear();
+            
+            foreach (var work in callbacksCopy)
             {
                 work.callback(work.state);
             }
-        
-            _currentTickCallbacks.Clear();
         }
     }
 }

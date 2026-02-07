@@ -1,12 +1,13 @@
-﻿using AsyncResearch.AsyncExperiments.Chapter_X_Additionals;
+﻿using AsyncResearch.AsyncExperiments.Chapter_4_AsyncVoid;
+using AsyncResearch.AsyncExperiments.Chapter_X_Additionals;
 
 namespace AsyncResearch
 {
     public class Program
     {
-        public static async Task Main(string[] args)
+        public static void Main(string[] args)
         {
-            await ForceYieldingInfiniteLoopExample.Test();
+            SynchronizationContextException.Test();
         }
     }
 }
