@@ -188,7 +188,9 @@ internal void RestoreDispatchState(in DispatchState dispatchState) // Task.cs, C
 В результате исполнения программы, мы увидим место, где на самом деле произошло исключение, несмотря на то что оно было выброшено в другом месте:
 ````
 Unhandled exception. System.Exception: HORY SHET!
-   at AsyncResearch.AsyncExperiments.Chapter_2_AnatomyOfCrash.TaskUnhandledExceptionExample.Test() in C:\work\AsyncResearch\AsyncExperiments\Chapter_2_AnatomyOfCrash\TaskUnhandledExceptionExample.cs:line 9
-   at AsyncResearch.Program.Main(String[] args) in C:\work\AsyncResearch\Program.cs:line 9
+   at AsyncResearch.AsyncExperiments.Chapter_2_AnatomyOfCrash.TaskUnhandledExceptionExample.Test()
+   at AsyncResearch.Program.Main(String[] args)
    at AsyncResearch.Program.<Main>(String[] args)
 ````
+
+А если бы мы сделали просто `throw exception`, CLR посчитал бы, что исключение возникло прямо сейчас. Весь предыдущий путь исключения был бы стёрт и замененм текущим местом.
