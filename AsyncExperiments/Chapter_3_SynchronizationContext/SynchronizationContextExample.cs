@@ -9,9 +9,8 @@
 
             Console.WriteLine($"[Main] Starting on thread: {Environment.CurrentManagedThreadId}");
             
-            for (var i = 0; i < 1; i++)
-                _ = DoWork();
-
+            _ = DoWork();
+            
             for (var i = 0; i < 5; i++)
             {
                 Console.WriteLine($"[Engine] Tick {i}...");
