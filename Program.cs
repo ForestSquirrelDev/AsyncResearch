@@ -1,5 +1,4 @@
 ﻿using AsyncResearch.AsyncExperiments.Chapter_5_Additionals;
-using BenchmarkDotNet.Running;
 
 namespace AsyncResearch
 {
@@ -7,7 +6,7 @@ namespace AsyncResearch
     {
         public static async Task Main(string[] args)
         {
-            BenchmarkRunner.Run<StateMachineSizeBenchmark>();
+            await TaskCompletionSourceExample.Test();
         }
     }
 }
