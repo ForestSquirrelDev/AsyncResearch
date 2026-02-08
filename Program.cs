@@ -1,4 +1,5 @@
 ﻿using AsyncResearch.AsyncExperiments.Chapter_1_HeartOfTheStateMachine;
+using AsyncResearch.AsyncExperiments.Chapter_5_Additionals;
 
 namespace AsyncResearch
 {
@@ -6,7 +7,7 @@ namespace AsyncResearch
     {
         public static async Task Main(string[] args)
         {
-            await ContinuationExample.Test();
+            await AsyncSurvivorCaller.Test();
             Console.WriteLine("Hello, World!");
         }
     }
