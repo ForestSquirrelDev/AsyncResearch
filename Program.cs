@@ -1,13 +1,13 @@
-﻿using AsyncResearch.AsyncExperiments.Chapter_4_AsyncVoid;
-using AsyncResearch.AsyncExperiments.Chapter_X_Additionals;
+﻿using AsyncResearch.AsyncExperiments.Chapter_5_Additionals;
+using BenchmarkDotNet.Running;
 
 namespace AsyncResearch
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
-            OrchestratingMemoryLeak.Test();
+            BenchmarkRunner.Run<StateMachineSizeBenchmark>();
         }
     }
 }
