@@ -7,7 +7,7 @@
 Чтобы решить эту проблему, юнитеки создали `UnitySynchronizationContext`. 
 
 Возьмём для примера следующий `MonoBehaviour`:
-````
+````csharp
 public class SampleScript : UnityEngine.MonoBehaviour
 {
     async void Start()
@@ -25,7 +25,7 @@ public class SampleScript : UnityEngine.MonoBehaviour
 `UnityEngine.Debug.Log("Hello World!")` вызовется из соседнего потока.
 
 Но этого не происходит, т.к. `SynchronizationContextAwaitTaskContinuation` кладёт `MoveNext()` в очередь внутри `UnitySynchronizationContext`:
-````
+````csharp
 public override void Post(SendOrPostCallback callback, object state) // UnitySynchronizationContext.cs, CS: 59
 {
   lock (this.m_AsyncWorkQueue)
@@ -51,7 +51,7 @@ _ThreadPoolWaitCallback.PerformWaitCallback()
 ````
 
 В разные моменты в течение `PlayerLoop`, C++ часть движка вызывает метод `ExecuteTasks`:
-````
+````csharp
 [RequiredByNativeCode]
 private static void ExecuteTasks() // UnitySynchronizationContext.cs, CS: 94
 {
@@ -62,7 +62,7 @@ private static void ExecuteTasks() // UnitySynchronizationContext.cs, CS: 94
 ````
 
 И мы начнём в главном потоке юнити выполнять коллбэки тасок, которые ранее упали в очередь:
-````
+````csharp
 public void Exec() // UnitySynchronizationContext.cs, CS: 70
 {
   lock (this.m_AsyncWorkQueue)
@@ -95,13 +95,13 @@ public void Exec() // UnitySynchronizationContext.cs, CS: 70
 Когда `UnitySynchronizationContext` просят сделать `Send()`, он проверяет, в каком потоке находится. Если это главный поток - коллбэк сразу вызывается.
 
 Но если метод вызвали не из главного потока, он останавливает этот поток до тех пор, пока callback не будет вызван главным потоком, когда тот будет разбирать очередь `m_AsyncWorkQueue`:
-````
+````csharp
 public override void Send(SendOrPostCallback callback, object state) // UnitySynchronizationContext.cs, CS: 38
 {
   // Если мы уже в главном потоке, выполни сразу
   if (this.m_MainThreadID == Thread.CurrentThread.ManagedThreadId)
   {
-    callback(state);
+    callback(state);csharp
   }
   // Если не в главном - заблокируй поток, из которого вызвали Send, до тех пор пока главный поток не доберётся до этого коллбека у себя в очереди
   else
