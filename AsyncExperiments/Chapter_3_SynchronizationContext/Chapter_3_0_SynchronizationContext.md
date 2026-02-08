@@ -29,7 +29,7 @@ private static async Task DoWork()
 ````
 
 Когда `Task` уходит в ожидание через `AsyncStateMachineBox`, можно увидеть, что внутри происходит следующее:
-````
+````csharp
 // If the caller wants to continue on the current context/scheduler and there is one,
 // fall back to using the state machine's delegate.
 if (continueOnCapturedContext) // Task.cs, CS: 2575
@@ -51,7 +51,7 @@ if (continueOnCapturedContext) // Task.cs, CS: 2575
 Cами разработчики .NET в комментарии здесь и написали: "если вызывающий хочет продолжить в текущем контексте/TaskScheduler, и они не default".
 
 Мы не модифицировали `TaskScheduler`, но `SynchronizationContext` у нас как раз будет кастомный, поэтому мы попадём в данную ветвь и создадим `SynchronizationContextAwaitTaskContinuation`:
-````
+````csharp
 if (SynchronizationContext.Current is SynchronizationContext syncCtx && syncCtx.GetType() != typeof(SynchronizationContext))
 {
     tc = new SynchronizationContextAwaitTaskContinuation(syncCtx, stateMachineBox.MoveNextAction, flowExecutionContext: false);
@@ -62,7 +62,7 @@ if (SynchronizationContext.Current is SynchronizationContext syncCtx && syncCtx.
 То есть по Continuation'ам будет гулять уже не `IAsyncStateMachineBox`, а `TaskContinuation`. В результате, когда у таска вызовется `TrySetResult`, мы попадём не напрямую в `IAsyncStateMachineBox.MoveNext()`,
 а в `TaskContinuation`:
 
-````
+````csharp
 switch (continuationObject) // Task.cs, CS: 3470
 {
     case IAsyncStateMachineBox stateMachineBox:
@@ -117,7 +117,7 @@ PortableThreadPool.WorkerThread.WorkerThreadStart()
 
 По стак трейсу мы можем наблюдать, что в `TrySetResult` мы попали в `RunContinuations`, а тот, видя, что `m_continuationObject` у таска - это `SynchronizationContextAwaitTaskContinuation`,
 вызывает `internal sealed override void Run(Task task, bool canInlineContinuationTask)` класса `SynchronizationContextAwaitTaskContinuation`:
-````
+````csharp
 internal sealed override void Run(Task task, bool canInlineContinuationTask) // TaskContinuation.cs, CS: 392
 {
     if (canInlineContinuationTask &&
@@ -144,7 +144,7 @@ internal sealed override void Run(Task task, bool canInlineContinuationTask) // 
 3. Текущий `Task` потока.
 
 Внутри метода, под `try-catch`, вызывается `ContextCallback`, т.е. метод `PostAction`:
-````
+````csharp
 private static void PostAction(object? state) // TaskContinuation.cs, CS: 416
 {
     Debug.Assert(state is SynchronizationContextAwaitTaskContinuation);
@@ -163,7 +163,7 @@ private static void PostAction(object? state) // TaskContinuation.cs, CS: 416
 ````
 
 И `Post` попадёт в наш `SimpleManualContext`:
-````
+````csharp
 public override void Post(SendOrPostCallback d, object? state) // SimpleManualContext.cs, CS: 10
 {
     lock (_queue)
@@ -176,7 +176,7 @@ public override void Post(SendOrPostCallback d, object? state) // SimpleManualCo
 Поскольку мы сделали наш контекст "однопоточным", мы выполним Post через `lock`: сколько угодно тасок могут класть результат в `Post` из разных потоков.
 
 В дальнейшем мы вызовем `ExecuteTasks` в управляющем потоке, и все таски, положившие свой результат (`MoveNext`) в очередь `_currentTickCallbacks`, выполнятся синхронно:
-````
+````csharp
 public void ExecuteTasks() // SimpleManualContext.cs, CS: 18
 {
     if (Environment.CurrentManagedThreadId != _mainThreadId)
