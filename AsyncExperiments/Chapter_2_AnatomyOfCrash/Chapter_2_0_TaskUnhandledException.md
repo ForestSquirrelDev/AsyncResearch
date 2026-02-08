@@ -30,7 +30,7 @@ public static async Task DoWorkAsync()
 
 Стейт машина, генерируясь компилятором, оборачивает весь свой код в `try-catch`:
 
-````
+````csharp
 void IAsyncStateMachine.MoveNext()
 {
   int num1 = this.<>1__state;
@@ -50,7 +50,7 @@ void IAsyncStateMachine.MoveNext()
 
 `AsyncTaskMethodBuilderT` передаёт исключение в `Task`. Task выставляет себе стейт `Faulted`, затем Lazy инициализирует свой внутренний объект `m_exceptionsHolder`, 
 хранящий исключения, и добавляет наш `Exception("HORY SHET!")` туда:
-````
+````csharp
 EnsureContingentPropertiesInitialized(); // Task.cs, CS: 3386
 if (AtomicStateUpdate(
     (int)TaskStateFlags.CompletionReserved,
@@ -85,7 +85,7 @@ lock (props)
 и вернёт этот `Faulted Task` наверх.
 
 Так будет происходить до тех пор, пока мы не дойдём до места, в котором try-catch отсутствует и исключение не обрабатывается. Это место - наша истинная точка входа:
-````
+````csharp
 [SpecialName]
 private static void <Main>([Nullable(1)] string[] args)
 {
@@ -93,7 +93,7 @@ private static void <Main>([Nullable(1)] string[] args)
 }
 ````
 Блокирующий вызов `GetResult()` приведёт к вызову метода `ValidateEnd`:
-````
+````csharp
 [StackTraceHidden]
 [MethodImpl(MethodImplOptions.AggressiveInlining)]
 internal static void ValidateEnd(Task task, ConfigureAwaitOptions options = ConfigureAwaitOptions.None) // TaskAwaiter.cs, CS: 79
@@ -105,7 +105,7 @@ internal static void ValidateEnd(Task task, ConfigureAwaitOptions options = Conf
 }
 ````
 И там, видя, что Task завершился неуспехом, TaskAwaiter выбрасывает исключение `Exception("HORY SHET!")`:
-````
+````csharp
 if (!task.IsCompletedSuccessfully) // TaskAwaiter.cs, CS: 114   
 {
     if ((options & ConfigureAwaitOptions.SuppressThrowing) == 0)

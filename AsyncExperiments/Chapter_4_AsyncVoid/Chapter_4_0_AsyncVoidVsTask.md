@@ -32,7 +32,7 @@ public static void DoWorkAsync()
 }
 ````
 
-Для `DoWorkAsync()` создаётся стейт машина - аналогично методам с сигнатурой `async Task`:
+Однако для `DoWorkAsync()` создаётся стейт машина - аналогично методам с сигнатурой `async Task`:
 ````
 [CompilerGenerated]
 [StructLayout(LayoutKind.Auto)]
@@ -47,7 +47,7 @@ private struct <DoWorkAsync>d__1 : IAsyncStateMachine
 
 С той лишь разницей, что вместо `AsyncTaskMethodBuilder` используется `AsyncVoidMethodBuilder`.
 
-Внутри у `AsyncVoidMethodBuilder` много общего с `AsyncTaskMethodBuilder` - в прямом смысле. `AsyncVoidMethodBuilder` хранит экземпляр `AsyncTaskMethodBuilder`:
+Внутри у `AsyncVoidMethodBuilder` много общего с `AsyncTaskMethodBuilder`. `AsyncVoidMethodBuilder` хранит экземпляр `AsyncTaskMethodBuilder`:
 ````
 public struct AsyncVoidMethodBuilder
 {
@@ -91,7 +91,7 @@ public static AsyncVoidMethodBuilder Create() // AsyncVoidMethodBuilder.cs, CS: 
 
 #### Второе - `SetResult()`.
 
-Когда стейт машина `DoWorkAsync()` вызовет у `builder` метод `SetResult()`, тот проставит SetResult() у своего экземпляра `AsyncTaskMethodBuilder`.
+Когда стейт машина `DoWorkAsync()` вызовет у `builder` метод `SetResult()`, тот проставит `SetResult()` у своего экземпляра `AsyncTaskMethodBuilder`.
 Причём он сделает это независимо от того, завершилась таска успехом, или нет:
 ````
 _builder.SetResult(); // AsyncVoidMethodBuilder.cs, CS: 99

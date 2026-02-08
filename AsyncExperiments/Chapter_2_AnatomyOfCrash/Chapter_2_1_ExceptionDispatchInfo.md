@@ -10,7 +10,7 @@
 
 В примере `TaskUnhandledExceptionExample`, стейт машина `Test()` выбрасывает исключение сразу после того, 
 как у неё вызовется `MoveNext` по завершении `DelayPromise` в стейт машине `DoWorkAsync`:
-````
+````csharp
 public static async Task Main(string[] args)
 {
     await TaskUnhandledExceptionExample.Test();
@@ -33,7 +33,7 @@ public static async Task DoWorkAsync()
 ````
 
 При этом `Test()` отловит исключение, которое он сам же и выбросил:
-````
+````csharp
 private struct <Test>d__0 : 
 ...
     void IAsyncStateMachine.MoveNext()
@@ -50,7 +50,7 @@ private struct <Test>d__0 :
 ...
 ````
 И затем передаст это исключение в `AsyncTaskMethodBuilderT`. Здесь происходит самое важное: `SetException` не только записывает к себе `Exception` object, но и захватывает трейс:
-````
+````csharp
 private void AddFaultException(object exceptionObject) // TaskExceptionHolder.cs, CS: 143
 {
     Debug.Assert(exceptionObject != null, "AddFaultException(): Expected a non-null exceptionObject");
@@ -93,7 +93,7 @@ internal DispatchState CaptureDispatchState() // Exception.CoreCLR.cs, CS: 251
 Затем в `SetResult()` стейт машины `Main()` произойдёт то же, что ранее произошло в стейт машине `Test()`: 
 `Main()` допишет кусочек себя через захват в массив байтов, стак трейс вырастет, и продолжит путешествовать и разрастаться как DeepCopy в виде массива байтов до тех пор, 
 пока исключение не будет выброшено (или проигнорировано и собрано GC):
-````
+````csharp
 public void Throw() // ExceptionDispatchInfo.cs, CS: 49
 {
     _exception.RestoreDispatchState(_dispatchState);
@@ -102,7 +102,7 @@ public void Throw() // ExceptionDispatchInfo.cs, CS: 49
 ````
 
 Наконец, истинная точка входа `Main()`, вызвав `GetResult()` без `try-catch`, выбросит исключение. Но `GetResult()` делает это не просто через `throw ex`, а с помощью `EDI`:
-````
+````csharp
 [SpecialName]
 private static void <Main>([Nullable(1)] string[] args)
 {
@@ -120,7 +120,7 @@ case TaskStatus.Faulted: // TaskAwaiter.cs, CS: 150
 ````
 
 `Exception` учитывает оригинальный стактрейс, захваченный `EDI`, и восстанавливает его:
-````
+````csharp
 internal void RestoreDispatchState(in DispatchState dispatchState) // Task.cs, CS: 141
 {
     if (!IsImmutableAgileException(this))

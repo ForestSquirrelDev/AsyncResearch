@@ -1,12 +1,12 @@
 `UnitySynchronizationContext` - это хороший пример того, когда может понадобиться `SynchronizationContext`.
 Большая часть кода движка Unity непотокобезопасна, поэтому разработчики движка запрещают его выполнение из других потоков. 
 
-Если `MoveNext()` асинхронной стейт машины вызовут из другого потока, то весь код, следующий за `await`, тоже продолжит выполняться из этого потока.
-Но тогда возможности async в юнити были бы крайне ограничены.
+В чистом .NET, если `MoveNext()` асинхронной стейт машины вызовут из другого потока, то весь код, следующий за `await`, тоже продолжит выполняться из этого потока.
+Но тогда возможности `async` в юнити были бы крайне ограничены.
 
 Чтобы решить эту проблему, юнитеки создали `UnitySynchronizationContext`. 
 
-Возьмём для примера следующий Unity Script:
+Возьмём для примера следующий `MonoBehaviour`:
 ````
 public class SampleScript : UnityEngine.MonoBehaviour
 {
@@ -18,8 +18,11 @@ public class SampleScript : UnityEngine.MonoBehaviour
 }
 ````
 
-Здесь мы сделали метод движка `Start` асинхронным, и самое главное - вызвали `Task.Delay`: Delay создаст DelayPromise, и `Task.FinishContinuations()` будет вызван из ThreadPool, т.е. с большой вероятностью это будет не основной поток.
-Если бы у юнити не было `UnitySynchronizationContext`, вызов `MoveNext()` у асинхронной стейт машины метода `Start()` привёл бы к тому, что `UnityEngine.Debug.Log("Hello World!")` вызовется из соседнего потока.
+Здесь мы сделали метод движка `Start` асинхронным, и самое главное - вызвали `Task.Delay`: `Delay` создаст `DelayPromise`, и `Task.FinishContinuations()` будет вызван из `ThreadPool`, 
+т.е. это будет не основной поток.
+
+Если бы у юнити не было `UnitySynchronizationContext`, вызов `MoveNext()` у асинхронной стейт машины метода `Start()` привёл бы к тому, что 
+`UnityEngine.Debug.Log("Hello World!")` вызовется из соседнего потока.
 
 Но этого не происходит, т.к. `SynchronizationContextAwaitTaskContinuation` кладёт `MoveNext()` в очередь внутри `UnitySynchronizationContext`:
 ````
@@ -79,12 +82,13 @@ public void Exec() // UnitySynchronizationContext.cs, CS: 70
 `Exec` вызывается не один раз за PlayerLoop. Как [пишут](https://discussions.unity.com/t/why-await-resumes-on-the-main-thread-in-unity-synchronizationcontext/1700147) сами юнитеки, он вызывается несколько раз в течение PlayerLoop:
 `Unity then processes this queue at specific points during the Unity PlayerLoop. In other words, they are executed as part of Unity’s normal frame update cycle.`
 
-Однако, как правило async continuations всё равно выполняются в следующем кадре:
+Однако, как правило `async continuations` всё равно выполняются в следующем кадре:
 `Because async continuations are queued and later flushed from the PlayerLoop, they are typically executed on the next frame. This is the root cause of the commonly observed “one-frame delay” in Unity async code.`
 
-В результате асинхронная стейт машина завершится в основном потоке, и весь код после 'await' тоже будет выполнен в главном потоке. Что позволяет Unity не ограничивать вызов нативных функций движка в асинхронных методах.
+В результате асинхронная стейт машина завершится в основном потоке, и весь код после 'await' тоже будет выполнен в главном потоке. 
+Что позволяет Unity не ограничивать вызов нативных функций движка в асинхронных методах.
 
-В отличие от примера с `SimpleManualContext`, Unity переопределяет метод `Send()` у `SynchronizationContext`.
+В отличие от предыдущего примера с `SimpleManualContext`, Unity переопределяет метод `Send()` у `SynchronizationContext`.
 `Task` никогда не вызовет этот метод - он всегда использует `Post(...)`.
 
 Но какие-то сторонние библиотеки, плагины, либо С++ движок Unity могут вызвать Send(). Этот метод предполагает блокирующее выполнение коллбека, переданного в метод `Send(...)`.
@@ -111,5 +115,3 @@ public override void Send(SendOrPostCallback callback, object state) // UnitySyn
   }
 }
 ````
-
-Если бы в предыдущем примере с `SimpleManualContext` мы на самом деле были UI-приложением, отсутствие "однопоточной" реализации `Send` приводило бы нас к непредсказуемым последствиям.

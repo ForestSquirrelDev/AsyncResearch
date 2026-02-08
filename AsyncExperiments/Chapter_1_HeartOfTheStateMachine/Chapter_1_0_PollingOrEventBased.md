@@ -48,7 +48,7 @@ namespace AsyncResearch
 ````
 
 Стало:
-````
+````csharp
 // Decompiled with JetBrains decompiler
 // Type: AsyncResearch.Program
 // Assembly: AsyncResearch, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
@@ -146,7 +146,7 @@ public class Program
 
 Компилятор сгенерировал для метода класса Program стейт машину `<Main>d__0`. Это структура, реализующая интерфейс [IAsyncStateMachine](https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/Runtime/CompilerServices/IAsyncStateMachine.cs):
 
-````
+````csharp
 namespace System.Runtime.CompilerServices
 {
     public interface IAsyncStateMachine
@@ -158,7 +158,7 @@ namespace System.Runtime.CompilerServices
 ````
 
 Здесь интересен тот момент, что операционной системе и .NET нужна синхронная точка входа нашей программы, поэтому когда мы объявили `public static async Task Main(string[] args)`, он не стал истинной точкой входа. Компилятор сгенерировал "настоящую" точку входа с другой сигнатурой, которая синхронно вызывает наш `async Main`:
-````
+````csharp
 [SpecialName]
 private static void <Main>([Nullable(1)] string[] args)
 {
@@ -172,7 +172,7 @@ private static void <Main>([Nullable(1)] string[] args)
 - `TaskAwaiter` u__1
 
 В поле `<>t__builder` проставляется инстанс структуры [AsyncTaskMethodBuilderT](https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/Runtime/CompilerServices/AsyncTaskMethodBuilderT.cs):
-````
+````csharp
 stateMachine.<>t__builder = AsyncTaskMethodBuilder.Create();
 ...
 
@@ -180,7 +180,7 @@ public static AsyncTaskMethodBuilder<TResult> Create() => default; // AsyncTaskM
 ````
 
 Затем, у стейт машины состояние сразу выставляется в -1: этот стейт означает исполнение с начала метода.
-````
+````csharp
 stateMachine.<>1__state = -1;
 ````
 Когда исполнение дойдёт до ожидания первого `await`, стейт выставится в 0. До второго `await`: 1. До третьего `await`: 2, и так далее.
@@ -188,7 +188,7 @@ stateMachine.<>1__state = -1;
 
 Наконец, мы просим `<>t__builder` запустить стейт машину вызовом метода `Start(ref stateMachine)`, и возвращаем вызывающему `Task`.
 Через Builder вызов Start проксируется в [AsyncMethodBuilderCore](https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/Runtime/CompilerServices/AsyncMethodBuilderCore.cs). Там происходит первый вызов `MoveNext()` стейт машины:
-````
+````csharp
 ...
 try
 {
@@ -250,7 +250,7 @@ if (num1 != 0)
 ...
 ````
 И дойдя до `await`, `Test()` тоже делает `GetAwaiter()`, который по цепочке синхронно вызывает уже `DoWorkAsync()`:
-````
+````csharp
 public static async Task DoWorkAsync()
 {
     var localVariable = 42;
@@ -259,20 +259,20 @@ public static async Task DoWorkAsync()
 }
 ````
 В low-level C# для метода DoWorkAsync() создаётся стейт машина, которая записывает в поля структуры локальную переменную: `this.<localVariable>5__2 = 42;`. Затем - берёт `TaskAwaiter` у `Task.Delay()`:
-````
+````csharp
 ...
 awaiter = Task.Delay(10000).GetAwaiter();
 ...
 ````
 Если бы awaiter оказался моментально завершён, наш код бы выполнился синхронно - мы сразу укажем стейт "завершён" и отдадим результат в Builder:
-````
+````csharp
 ...
 this.<>1__state = -2;
 this.<>t__builder.SetResult();
 ...
 ````
 Однако мы ждём `Delay(10000)`, и `awaiter` не завершён. Поэтому во всём нашем примере это будет первый вызов `await`, который не сможет завершиться синхронно, и мы наконец попадём в `AwaitUnsafeOnCompleted`:
-````
+````csharp
 [MethodImpl(MethodImplOptions.AggressiveInlining)] // AsyncTaskMethodBuilderT.cs, CS: 86
 internal static void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(
     ref TAwaiter awaiter, ref TStateMachine stateMachine, [NotNull] ref Task<TResult>? taskField)
@@ -284,7 +284,7 @@ internal static void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(
 }
 ````
 Здесь создаётся `AsyncStateMachineBox<TStateMachine>`. Это класс, и его название не случайно. Он в буквальном смысле используется для упаковки стейт машины в управляемую кучу, чтобы потом продолжить исполнение кода после `await`:
-````
+````csharp
 ...
 box.StateMachine = stateMachine; // AsyncTaskMethodBuilderT, CS: 225
 box.Context = currentContext;
@@ -294,7 +294,7 @@ return box;
 ````
 
 Через `Builder`, вызов `AwaitUnsafeOnCompleted` передаётся в `TaskAwaiter`:
-````
+````csharp
 internal static void UnsafeOnCompletedInternal(Task task, IAsyncStateMachineBox stateMachineBox, bool continueOnCapturedContext) // TaskAwaiter.cs, CS: 193
 {
     ...
@@ -307,7 +307,7 @@ internal static void UnsafeOnCompletedInternal(Task task, IAsyncStateMachineBox 
 ````
 
 Если `Task` уже `Completed`, мы сразу попросим `ThreadPool` выполнить continuation, как только появится свободный поток:
-````
+````csharp
 ...
 if (!AddTaskContinuation(stateMachineBox, addBeforeOthers: false)) // Task.cs, CS: 2592
 {
@@ -317,7 +317,7 @@ if (!AddTaskContinuation(stateMachineBox, addBeforeOthers: false)) // Task.cs, C
 ````
 
 Но если таск не завершён, мы попадаем в метод `AddTaskContinuation`: 
-````
+````csharp
 private bool AddTaskContinuation(object tc, bool addBeforeOthers) // Task.cs, CS: 4598
 {
     Debug.Assert(tc != null);
@@ -346,7 +346,7 @@ PortableThreadPool.WorkerThread.WorkerThreadStart()
 ````
 
 В результате чего мы попадаем в метод `CompleteTimedOut` внутреннего вложенного класса `Task` - `DelayPromise`:
-````
+````csharp
 private void CompleteTimedOut() // Task.cs, CS: 5735
 {
     if (TrySetResult())
@@ -365,7 +365,7 @@ private void CompleteTimedOut() // Task.cs, CS: 5735
 В методе `TrySetResult()` мы попадаем в `RunContinuations()`, внутри которого есть свич, который видит что `continuationObject` - это `AsyncStateMachineBox`, и вызывает `RunOrScheduleAction`.
 
 И если мы попали в Happy path, там вызывается `box.MoveNext()`:
-````
+````csharp
 ...
 try // TaskContinuation.cs, CS: 795
 {
@@ -376,7 +376,7 @@ try // TaskContinuation.cs, CS: 795
 ````
 
 Что, наконец, приведёт нас к завершающей части стейт машины метода `DoWorkAsync()`:
-````
+````csharp
 ...
 else
 {
@@ -399,7 +399,7 @@ Console.WriteLine(string.Concat("Resumed with ", this.<localVariable>5__2.ToStri
 4. `Test()`, в свою очередь, вызывает `DoWorkAsync()`. Тот тоже возвращает ему `TaskAwaiter`, и стейт машина `Test()` тоже просит пнуть её через `m_continuationObject`, когда `Task` метода `DoWorkAsync()` завершится.
 5. Теперь таска, созданная внутри стейт машины `DoWorkAsync()`, знает, что надо пнуть `Test()`.
 6. В обратную сторону этот процесс работает так же: таска `Delay()`, созданная внутри стейт машины `DoWorkAsync()`, завершается. Смотрит в свой `m_continuationObject`. Там лежит `AsyncStateMachineBox` `DoWorkAsync`. Вызывается `DoWorkAsync.MoveNext()`: 
-````
+````csharp
 ...
 try // TaskContinuation.cs, CS: 792
 {
@@ -414,7 +414,7 @@ try // TaskContinuation.cs, CS: 792
 
 `Main()` завершается. На этом этапе просыпается скрытая точка входа (`static void <Main>`), которая была заблокирована вызовом `GetAwaiter().GetResult()`:
 
-````
+````csharp
 [SpecialName]
 private static void <Main>([Nullable(1)] string[] args)
 {

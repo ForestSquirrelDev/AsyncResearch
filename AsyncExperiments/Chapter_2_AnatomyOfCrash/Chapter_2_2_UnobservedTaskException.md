@@ -5,7 +5,7 @@
 Тогда `GetResult()`, и соответственно `ValidateEnd()`, не вызовутся.
 
 Возьмём пример:
-````
+````csharp
 public static void Main(string[] args)
 {
     UnobservedTaskExceptionExample.TestCaller();
@@ -39,7 +39,7 @@ private static async Task DoWorkAsync()
 Здесь мы вызываем асинхронный метод `Test()` без ожидания его TaskAwaiter: `TestCaller()` никогда не узнает о том, что в `Test()` было выброшено исключение.
 
 На этот случай у внутреннего объекта `Task` - `TaskExceptionHolder`, имеется Finalizer:
-````
+````csharp
 ~TaskExceptionHolder() // TaskExceptionHolder.cs, CS: 54
 {
     if (m_faultExceptions != null && !m_isHandled)
@@ -66,8 +66,8 @@ Hello, World!
 Process finished with exit code 0.
 ````
 
-Но если мы подпишемся на `TaskScheduler.UnobservedTaskException` - то уже сможем увидеть необработанное исключение:
-````
+Но если мы подпишемся на `TaskScheduler.UnobservedTaskException` и зафорсим сборку мусора - то уже сможем увидеть необработанное исключение:
+````csharp
 public static void TestCaller()
 {
     TaskScheduler.UnobservedTaskException += OnUnobservedException;
@@ -102,8 +102,8 @@ Hello, World!
 Process finished with exit code 0.
 ````
 
-Ещё одна интересная особенность `UnobservedTaskException` заключается в следующем:
-````
+У этого кода есть интересная особенность:
+````csharp
 public static void TestCaller()
 {
     TaskScheduler.UnobservedTaskException += OnUnobservedException;
@@ -126,7 +126,7 @@ public static void TestCaller()
 {
     TaskScheduler.UnobservedTaskException += OnUnobservedException;
     
-    // А вот так - будет!
+    // А вот так - будет
     CreateTaskAndForget();
     Thread.Sleep(500);
     
@@ -147,5 +147,6 @@ private static void CreateTaskAndForget()
 ````
 
 Если запустить процесс со включенным дебаггером, либо просто собранный под Debug а не Release, Task, внутри которого исключение, не соберётся раньше завершения программы.
+
 В Debug Mode все локальные переменные удерживаются до выхода из стека выполнения, даже если они не используются. Поэтому мы увидим исключение только в Release,
 либо - если вынесем вызов таски в отдельный метод.
