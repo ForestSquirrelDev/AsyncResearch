@@ -1,5 +1,5 @@
 Возьмём следующий пример:
-````
+````csharp
 public static class AsyncVoidExample
 {
     public static void Test()
@@ -20,7 +20,7 @@ public static class AsyncVoidExample
 
 Метод `DoWorkAsync()` не возвращает Task, как это делают методы с сигнатурой `async Task`:
 
-````
+````csharp
 [AsyncStateMachine(typeof (AsyncVoidExample.<DoWorkAsync>d__1))]
 public static void DoWorkAsync()
 {
@@ -33,7 +33,7 @@ public static void DoWorkAsync()
 ````
 
 Однако для `DoWorkAsync()` создаётся стейт машина - аналогично методам с сигнатурой `async Task`:
-````
+````csharp
 [CompilerGenerated]
 [StructLayout(LayoutKind.Auto)]
 private struct <DoWorkAsync>d__1 : IAsyncStateMachine
@@ -48,7 +48,7 @@ private struct <DoWorkAsync>d__1 : IAsyncStateMachine
 С той лишь разницей, что вместо `AsyncTaskMethodBuilder` используется `AsyncVoidMethodBuilder`.
 
 Внутри у `AsyncVoidMethodBuilder` много общего с `AsyncTaskMethodBuilder`. `AsyncVoidMethodBuilder` хранит экземпляр `AsyncTaskMethodBuilder`:
-````
+````csharp
 public struct AsyncVoidMethodBuilder
 {
     private SynchronizationContext? _synchronizationContext; // AsyncVoidMethodBuilder.cs, CS: 17
@@ -58,7 +58,7 @@ public struct AsyncVoidMethodBuilder
 ````
 
 За счёт этого `AsyncVoidMethodBuilder` может использовать всё тот же метод `AwaitUnsafeOnCompleted`, когда в стейт машине встречается незавершённый `TaskAwaiter` - он просто проксирует вызов к `AsyncTaskMethodBuilder`:
-````
+````csharp
 public void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>( // AsyncVoidMethodBuilder.cs, CS: 69
     ref TAwaiter awaiter, ref TStateMachine stateMachine)
     where TAwaiter : ICriticalNotifyCompletion
@@ -67,7 +67,7 @@ public void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>( // AsyncVoidMethodB
 ````
 
 Аналогично, `AsyncVoidMethodBuilder` использует общий с `AsyncTaskMethodBuilder` helper - `AsyncMethodBuilderCore`:
-````
+````csharp
 [DebuggerStepThrough] // AsyncVoidMethodBuilder.cs, CS: 37
 [MethodImpl(MethodImplOptions.AggressiveInlining)]    
 public void Start<TStateMachine>(ref TStateMachine stateMachine) where TStateMachine : IAsyncStateMachine =>
@@ -79,7 +79,7 @@ public void Start<TStateMachine>(ref TStateMachine stateMachine) where TStateMac
 #### Первое - метод `Create()`.
 
 Внутри него AsyncVoidMethodBuilder сообщает SynchronizationContext о начале выполнения асинхронной операции:
-````
+````csharp
 public static AsyncVoidMethodBuilder Create() // AsyncVoidMethodBuilder.cs, CS: 23
 {
     SynchronizationContext? sc = SynchronizationContext.Current; 
@@ -93,7 +93,7 @@ public static AsyncVoidMethodBuilder Create() // AsyncVoidMethodBuilder.cs, CS: 
 
 Когда стейт машина `DoWorkAsync()` вызовет у `builder` метод `SetResult()`, тот проставит `SetResult()` у своего экземпляра `AsyncTaskMethodBuilder`.
 Причём он сделает это независимо от того, завершилась таска успехом, или нет:
-````
+````csharp
 _builder.SetResult(); // AsyncVoidMethodBuilder.cs, CS: 99
 ````
 
@@ -103,7 +103,7 @@ _builder.SetResult(); // AsyncVoidMethodBuilder.cs, CS: 99
 (или не обрабатывать) лежащее там исключение.
 
 `AsyncVoidMethodBuilder` сразу пытается выбросить исключение: и делает он это, в зависимости от наличия `SynchronizationContext`- либо прямо в контекст:
-````
+````csharp
 SynchronizationContext? context = _synchronizationContext; AsyncVoidMethodBuilder.cs, CS: 123
 if (context != null)
 {
@@ -120,7 +120,7 @@ if (context != null)
 ````
 
 Либо в `ThreadPool`:
-````
+````csharp
 ThreadPool.QueueUserWorkItem(static state => ((ExceptionDispatchInfo)state!).Throw(), edi); // Task.cs, CS: 1929
 ````
 

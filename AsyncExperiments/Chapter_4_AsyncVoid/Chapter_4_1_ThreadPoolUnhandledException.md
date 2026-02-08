@@ -2,34 +2,29 @@
 
 Возьмём следующий пример:
 ````csharp
-public class Program
+public static void Main(string[] args)
 {
-    public static void Main(string[] args)
+    ThreadPoolException.Test();
+    while (true)
     {
-        ThreadPoolException.Test();
-        while (true)
-        {
-            Console.WriteLine("Hello World!");
-            Thread.Sleep(100);
-        }
+        Console.WriteLine("Hello World!");
+        Thread.Sleep(100);
     }
 }
-public class ThreadPoolException
+
+public static void Test()
 {
-    public static void Test()
-    {
-        Console.WriteLine("Test: Start");
-        DoWorkAsync();
-        Console.WriteLine("Test: End");
-    }
-    
-    private static async void DoWorkAsync()
-    {
-        var localVariable = 42;
-        await Task.Delay(1000);
-        Console.WriteLine("Resumed with " + localVariable);
-        throw new Exception("DoWorkAsync: HORY SHIET!");
-    }
+    Console.WriteLine("Test: Start");
+    DoWorkAsync();
+    Console.WriteLine("Test: End");
+}
+
+private static async void DoWorkAsync()
+{
+    var localVariable = 42;
+    await Task.Delay(1000);
+    Console.WriteLine("Resumed with " + localVariable);
+    throw new Exception("DoWorkAsync: HORY SHIET!");
 }
 ````
 
@@ -150,7 +145,7 @@ AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
 
 Как [пишут сами Microsoft](https://learn.microsoft.com/en-us/dotnet/api/system.unhandledexceptioneventargs?view=net-9.0), свойство `IsTerminating` указывает на то,
 завершает ли CLR работу процесса. И в нашем случае оно будет `true`:
-````csharp
+````
 CLR Caught unhandled exception!
 Is process terminating? True
 Error: 'DoWorkAsync: HORY SHIET!'
