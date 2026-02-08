@@ -1,7 +1,7 @@
 ﻿Разработчики .NET добавили возможность настраивать поведение `TaskAwaiter` через обращение к [ConfigureAwait](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task.configureawait?view=net-10.0).
 
 Возьмём следующий пример:
-````
+````csharp
 public static async Task Test()
 {
     Console.WriteLine("Test: Start");
@@ -75,8 +75,8 @@ Process finished with exit code 0.
 ````
 
 Аналогичным образом, ConfigureAwait позволяет настраивать ещё две вещи:
-- ConfigureAwaitOptions.ContinueOnCapturedContext;
-- ConfigureAwaitOptions.ForceYielding.
+- `ConfigureAwaitOptions.ContinueOnCapturedContext`;
+- `ConfigureAwaitOptions.ForceYielding`.
 
 #### ConfigureAwaitOptions.ContinueOnCapturedContext
 
@@ -155,15 +155,15 @@ if (!awaiter.IsCompleted)
 }
 ````
 
-Стейт машина, видя, что awaiter не завершён, заставит рантайм .NET создать `AsyncStateMachineBox` и не выполнится синхронно.
+Стейт машина, видя, что `awaiter` не завершён, заставит рантайм .NET создать `AsyncStateMachineBox` и не выполнится синхронно.
 
 Здесь возникает два забавных момента. 
 
-Во-первых, если вызвать ForceYielding на уже завершённом таске, возникает вопрос: стейт машина упаковалась в управляемую кучу, но Task
-уже завершён, и TrySetResult() никто не вызовет. Что тогда будет со стейт машиной? Она что, навсегда останется лежать в куче и создаст нам утечку памяти?
+Во-первых, если вызвать `ForceYielding` на уже завершённом таске, возникает вопрос: стейт машина упаковалась в управляемую кучу, но `Task`
+уже завершён, и `TrySetResult()` никто не вызовет. Что тогда будет со стейт машиной? Она что, навсегда останется лежать в куче и создаст нам утечку памяти?
 
-Ответ - не останется. Видя, что Task уже завершён, рантайм сразу поставит коллбэк (MoveNext стейт машины) в очередь на выполнение:
-````
+Ответ - не останется. Видя, что `Task` уже завершён, рантайм сразу поставит коллбэк (`MoveNext` стейт машины) в очередь на выполнение:
+````csharp
 // Здесь будет false, если не сам авейтер, а его Task уже завершён
 if (!AddTaskContinuation(continuationAction, addBeforeOthers: false)) // Task.cs, CS: 2534
 {
@@ -171,7 +171,7 @@ if (!AddTaskContinuation(continuationAction, addBeforeOthers: false)) // Task.cs
 }
 ````
 
-Второй забавный момент - ручное обращение к состоянию `IsCompleted` у Awaiter. Если написать вот так, то мы попадём в бесконечный цикл:
+Второй забавный момент - ручное обращение к состоянию `IsCompleted` у `Awaiter`. Если написать вот так, то мы попадём в бесконечный цикл:
 ````csharp
 public static async Task Test()
 {
@@ -185,4 +185,4 @@ public static async Task Test()
 }
 ````
 
-Так произошло, потому что `ConfiguredTaskAwaiter` с переданной опцией `ForceYielding` всегда вернёт `false`. Истинное состояние завершённости в данном случае хранится внутри `task`.
+Так произошло, потому что `ConfiguredTaskAwaiter` с переданной опцией `ForceYielding` всегда вернёт `false`. Истинное состояние завершённости в данном случае хранится внутри `Task`.
