@@ -1,4 +1,4 @@
-﻿Существует способ вызвать stateMachine.MoveNext() вручную: для этого нужно привязать её выполнение к TaskCompletionSource.
+﻿Существует способ вызвать stateMachine.MoveNext() вручную: для этого нужно привязать её выполнение к `TaskCompletionSource`.
 
 ````csharp
 public static async Task Test()

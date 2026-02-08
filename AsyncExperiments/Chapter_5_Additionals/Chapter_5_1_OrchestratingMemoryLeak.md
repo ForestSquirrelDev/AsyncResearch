@@ -50,10 +50,12 @@ Tick 4: 102675 KB
 Process finished with exit code 0.
 ````
 
-Цепочка ссылок выглядит следующим образом: `Static List` -> `TaskCompletionSource` -> `Task` (ссылочный тип внутри `TaskCompletionSource`) -> `Continuations` (ссылочный тип внутри `Task`)
--> `AsyncStateMachineBox` (стейт машина по методу `MyMethod`) -> массив `hugeData`.
+То есть стейт машина, вместе с аллоцированным масивом, осталась лежать в управляемой куче, несмотря на то что мы несколько раз зафорсили сборку мусора.
 
-Этого можно избежать, если удалить `TaskCompletionSource` из списка - тогда мы порвём связь с GC Root:
+Цепочка ссылок в этом случае выглядит следующим образом: `Static List` -> `TaskCompletionSource` -> `Task` (ссылочный тип внутри `TaskCompletionSource`) -> 
+`Continuations` (ссылочный тип внутри `Task`) -> `AsyncStateMachineBox` (стейт машина по методу `MyMethod`) -> массив `hugeData`.
+
+Утечки можно избежать, если удалить `TaskCompletionSource` из списка - тогда мы порвём связь с GC Root:
 ````csharp
 private static void Leak()
 {
@@ -152,7 +154,7 @@ private static void Leak()
   }
 ````
 
-Когда стейт машина переходит в состояние "завершено", она прямо затирает ссылку на массив:
+Когда стейт машина переходит в состояние "завершено", она затирает ссылку на массив:
 ````csharp
 this.<hugeData>5__2 = (byte[]) null;
 ````
