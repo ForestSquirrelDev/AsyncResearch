@@ -7,7 +7,7 @@ namespace AsyncResearch
     {
         public static void Main(string[] args)
         {
-            SynchronizationContextException.Test();
+            OrchestratingMemoryLeak.Test();
         }
     }
 }
