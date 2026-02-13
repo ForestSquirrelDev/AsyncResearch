@@ -1,5 +1,4 @@
-﻿using AsyncResearch.AsyncExperiments.Chapter_1_HeartOfTheStateMachine;
-using AsyncResearch.AsyncExperiments.Chapter_5_Additionals;
+﻿using AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace;
 
 namespace AsyncResearch
 {
@@ -7,8 +6,7 @@ namespace AsyncResearch
     {
         public static async Task Main(string[] args)
         {
-            await AsyncSurvivorCaller.Test();
-            Console.WriteLine("Hello, World!");
+            await AsyncVoidNestedException.AsyncVoidExceptionTest();
         }
     }
 }
