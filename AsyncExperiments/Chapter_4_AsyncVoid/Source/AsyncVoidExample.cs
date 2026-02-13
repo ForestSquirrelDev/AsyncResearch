@@ -1,15 +1,15 @@
-namespace AsyncResearch.AsyncExperiments.Chapter_1_HeartOfTheStateMachine
+namespace AsyncResearch.AsyncExperiments.Chapter_4_AsyncVoid.Source
 {
-    public static class ContinuationExample
+    public static class AsyncVoidExample
     {
-        public static async Task Test()
+        public static void Test()
         {
             Console.WriteLine("Start");
-            await DoWorkAsync();
+            DoWorkAsync();
             Console.WriteLine("End");
         }
         
-        public static async Task DoWorkAsync()
+        public static async void DoWorkAsync()
         {
             var localVariable = 42;
             await Task.Delay(10000);

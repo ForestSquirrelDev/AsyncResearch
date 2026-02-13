@@ -1,4 +1,4 @@
-﻿namespace AsyncResearch.AsyncExperiments.Chapter_X_Additionals
+﻿namespace AsyncResearch.AsyncExperiments.Chapter_5_Instruments.Source
 {
     public static class ForceYieldingInfiniteLoopExample
     {

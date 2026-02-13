@@ -1,4 +1,5 @@
 ﻿using AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace;
+using AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace.Source;
 
 namespace AsyncResearch
 {

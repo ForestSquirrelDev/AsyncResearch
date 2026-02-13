@@ -1,6 +1,4 @@
-﻿using System.Runtime.ExceptionServices;
-
-namespace AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace
+﻿namespace AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace.Source
 {
     public static class AsyncVoidTcsException
     {

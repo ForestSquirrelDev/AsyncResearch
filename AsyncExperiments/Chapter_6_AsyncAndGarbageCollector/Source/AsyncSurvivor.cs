@@ -1,4 +1,4 @@
-﻿namespace AsyncResearch.AsyncExperiments.Chapter_5_Additionals
+﻿namespace AsyncResearch.AsyncExperiments.Chapter_6_AsyncAndGarbageCollector.Source
 {
     public class AsyncSurvivorCaller
     {

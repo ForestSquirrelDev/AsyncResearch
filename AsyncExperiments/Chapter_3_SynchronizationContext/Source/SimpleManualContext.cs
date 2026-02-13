@@ -1,4 +1,4 @@
-﻿namespace AsyncResearch.AsyncExperiments.Chapter_3_SynchronizationContext
+﻿namespace AsyncResearch.AsyncExperiments.Chapter_3_SynchronizationContext.Source
 {
     public class SimpleManualContext : SynchronizationContext
     {

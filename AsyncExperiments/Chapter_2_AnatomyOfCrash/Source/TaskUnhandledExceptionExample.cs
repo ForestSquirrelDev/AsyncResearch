@@ -1,4 +1,4 @@
-﻿namespace AsyncResearch.AsyncExperiments.Chapter_2_AnatomyOfCrash
+﻿namespace AsyncResearch.AsyncExperiments.Chapter_2_AnatomyOfCrash.Source
 {
     public class TaskUnhandledExceptionExample
     {

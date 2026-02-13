@@ -1,11 +1,13 @@
-﻿namespace AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace
+﻿namespace AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace.Source
 {
-    public static class AsyncVoidNestedException
+    public static class AsyncTaskNestedException
     {
-        public static async Task AsyncVoidExceptionTest()
+        public static async Task AsyncTaskExceptionTest()
         {
-            _ = Layer0();
-            await Task.Delay(3000);
+            TaskScheduler.UnobservedTaskException += (sender, args) => Console.WriteLine($"Unobserved task exception {args.Exception.Flatten()}");
+            await Layer0();
+            await Task.Delay(1000);
+            GC.Collect();
         }
 
         private static async Task Layer0()
@@ -29,10 +31,10 @@
         private static async Task Layer3()
         {
             await Task.Delay(100);
-            Layer4();
+            await Layer4();
         }
         
-        private static async void Layer4()
+        private static async Task Layer4()
         {
             await Task.Delay(100);
             throw new Exception("HORY SHIET!");
