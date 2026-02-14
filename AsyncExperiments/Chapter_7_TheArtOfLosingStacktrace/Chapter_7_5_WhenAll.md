@@ -25,13 +25,13 @@ private static async Task Exception3()
 }
 ````
 
-В методах, выбрасывающих исключения, нет асихронного ожидания. Мы наверняка знаем, что на момент вызова `t1`, `t2` и `t3` исключение уже было выброшено. Кажется логичным, что ожидание
-всех тасок с исключением, вернёт нам все три исключения. Но вопреки ожиданиями, вывод будет следующим:
+В методах, выбрасывающих исключения, нет асихронного ожидания. Мы наверняка знаем, что на момент вызова `t1`, `t2` и `t3` исключение уже было выброшено и хранится внутри тасок. 
+Кажется логичным, что ожидание всех тасок с исключением, вернёт нам все три исключения. Но вопреки ожиданиями, вывод будет следующим:
 ````
 Unhandled exception. System.Exception: Exception1
    at AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace.Source.TaskWhenAllExceptionsExample.Exception1()
    at AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace.Source.TaskWhenAllExceptionsExample.WhenAllExceptionsExample()
-   at AsyncResearch.Program.Main(String[] args) in D:\work\AsyncResearch\Program.cs:line 9
+   at AsyncResearch.Program.Main(String[] args)
    at AsyncResearch.Program.<Main>(String[] args)
 
 Process finished with exit code -532,462,766.
