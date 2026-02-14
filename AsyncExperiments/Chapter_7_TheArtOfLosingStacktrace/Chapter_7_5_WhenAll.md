@@ -123,20 +123,20 @@ public static async Task WhenAllExceptionsExample()
 ````
 Unhandled exception. System.AggregateException: One or more errors occurred. (Exception1) (Exception2) (Exception3)
  ---> System.Exception: Exception1
-   at AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace.Source.TaskWhenAllSpinWaitExample.Exception1()
-   at AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace.Source.TaskWhenAllSpinWaitExample.WhenAllExceptionsExample()
+   at AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace.Source.TaskWhenAllSynchronousWaitExample.Exception1()
+   at AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace.Source.TaskWhenAllSynchronousWaitExample.WhenAllExceptionsExample()
    --- End of inner exception stack trace ---
    at System.Threading.Tasks.Task.ThrowIfExceptional(Boolean includeTaskCanceledExceptions)
    at System.Threading.Tasks.Task.Wait(Int32 millisecondsTimeout, CancellationToken cancellationToken)
    at System.Threading.Tasks.Task.Wait()
-   at AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace.Source.TaskWhenAllSpinWaitExample.WhenAllExceptionsExample()
+   at AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace.Source.TaskWhenAllSynchronousWaitExample.WhenAllExceptionsExample()
    at AsyncResearch.Program.Main(String[] args)
    at AsyncResearch.Program.<Main>(String[] args)
  ---> (Inner Exception #1) System.Exception: Exception2
-   at AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace.Source.TaskWhenAllSpinWaitExample.Exception2()
+   at AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace.Source.TaskWhenAllSynchronousWaitExample.Exception2()
 
  ---> (Inner Exception #2) System.Exception: Exception3
-   at AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace.Source.TaskWhenAllSpinWaitExample.Exception3()
+   at AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace.Source.TaskWhenAllSynchronousWaitExample.Exception3()
 
 
 Process finished with exit code -532,462,766.

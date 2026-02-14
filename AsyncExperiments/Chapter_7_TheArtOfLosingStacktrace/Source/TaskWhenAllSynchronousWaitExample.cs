@@ -1,6 +1,6 @@
 ﻿namespace AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace.Source
 {
-    public static class TaskWhenAllSpinWaitExample
+    public static class TaskWhenAllSynchronousWaitExample
     {
         public static async Task WhenAllExceptionsExample()
         {

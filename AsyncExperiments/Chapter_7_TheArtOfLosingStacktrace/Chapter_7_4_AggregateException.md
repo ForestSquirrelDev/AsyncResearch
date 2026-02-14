@@ -43,7 +43,8 @@ private static async Task Layer4()
 }
 ````
 
-Рантайм .NET даёт нам возможность ожидать результата `Task` блокирующим вызовом, через `Spin Wait`. Когда мы так делаем, список исключений оборачивается в `AggregateException`:
+Рантайм .NET даёт нам возможность ожидать результата `Task` блокирующим вызовом: `Task.Wait()`. Сначала мы попытаемся выполнить задачу на том же потоке, 
+а если не получится - заблокируем поток до тех пор, пока задача не выполнится. Когда мы так делаем, список исключений оборачивается в `AggregateException`:
 ````csharp
 internal AggregateException CreateExceptionObject(bool calledFromFinalizer, Exception? includeThisException) // TaskExceptionHolder.cs, CS: 252
 {
@@ -105,7 +106,7 @@ internal void ThrowIfExceptional(bool includeTaskCanceledExceptions) // Task.cs,
 
 А при таком синтаксисе, CLR посчитает что исключение было выброшено именно здесь - и запишет место выброса в свойство `exception.Stacktrace`.
 
-Чтобы сохранить оригинальный путь исключения в сценарии со Spin Wait, нужно отловить именно `AggregateException`, и обратиться к `InnerException`, либо вызвать `Flatten()`:
+Чтобы сохранить оригинальный путь исключения в сценарии с блокирующим ожиданием, нужно отловить именно `AggregateException`, и обратиться к `InnerException`, либо вызвать `Flatten()`:
 ````csharp
 ...
 try
