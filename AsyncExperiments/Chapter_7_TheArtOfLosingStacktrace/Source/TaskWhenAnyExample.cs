@@ -4,6 +4,8 @@
     {
         public static async Task WhenAnyExceptionsExample()
         {
+            TaskScheduler.UnobservedTaskException += (sender, args) => Console.WriteLine($"Unobserved exception {args.Exception}");
+            
             var t1 = Exception1();
             var t2 = Exception2();
             var t3 = Exception3();
@@ -11,12 +13,17 @@
             var any = Task.WhenAny(t1, t2, t3);
             try
             {
-                await any;
+                await await any;
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
             }
+
+            await Task.Delay(1000);
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
         }
 
         private static async Task Exception1()
