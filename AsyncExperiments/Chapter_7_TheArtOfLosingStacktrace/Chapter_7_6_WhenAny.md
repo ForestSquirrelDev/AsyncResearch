@@ -216,3 +216,16 @@ catch (Exception ex)
 и дождётся его завершения. Затем вызовет `awaiter3.GetResult();`.
 
 При этом важный нюанс в том, что поскольку мы как и в примере с `Task.WhenAll()`, обработали только первое исключение - остальные два всё равно упадут в `UnobservedTaskException`.
+
+Такой же трюк необходимо провернуть и с `TaskFactory.StartNew()`, чтобы поймать исключение:
+````csharp
+public static async Task RunTaskFactoryExample()
+{
+    var task = Task.Factory.StartNew(async () => {
+        await Task.Delay(100);
+        throw new Exception("HORY SHIET!");
+    });
+    // Если не сделать двойной await, исключение проглотится
+    await await task;
+}
+````
