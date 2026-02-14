@@ -130,3 +130,58 @@ System.AggregateException: One or more errors occurred. (HORY SHIET!)
    at AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace.Source.AggregateExceptionExample.Layer0()
    --- End of inner exception stack trace ---
 ````
+
+Использование метода `ToString()` у `AggregateException` тоже решит проблему:
+````csharp
+...
+try
+{
+    Layer0().Wait();
+}
+catch (AggregateException ex)
+{
+    Console.WriteLine(ex);
+}
+...
+````
+
+`AggregateException` в методе `ToString()` объединяет все исключения:
+````csharp
+public override string ToString() // AggregateException.cs, CS: 368
+{
+    StringBuilder text = new StringBuilder();
+    text.Append(base.ToString());
+
+    for (int i = 0; i < _innerExceptions.Length; i++)
+    {
+        if (_innerExceptions[i] == InnerException)
+            continue;
+
+        text.Append(Environment.NewLineConst + InnerExceptionPrefix);
+        text.AppendFormat(CultureInfo.InvariantCulture, SR.AggregateException_InnerException, i);
+        text.Append(_innerExceptions[i].ToString());
+        text.Append("<---");
+        text.AppendLine();
+    }
+
+    return text.ToString();
+}
+````
+
+Поэтому в выводе программы будет целостный стактрейс:
+````
+System.AggregateException: One or more errors occurred. (HORY SHIET!)
+ ---> System.Exception: HORY SHIET!
+   at AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace.Source.AggregateExceptionExample.Layer4()
+   at AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace.Source.AggregateExceptionExample.Layer3()
+   at AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace.Source.AggregateExceptionExample.Layer2()
+   at AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace.Source.AggregateExceptionExample.Layer1()
+   at AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace.Source.AggregateExceptionExample.Layer0()
+   --- End of inner exception stack trace ---
+   at System.Threading.Tasks.Task.ThrowIfExceptional(Boolean includeTaskCanceledExceptions)
+   at System.Threading.Tasks.Task.Wait(Int32 millisecondsTimeout, CancellationToken cancellationToken)
+   at System.Threading.Tasks.Task.Wait()
+   at AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace.Source.AggregateExceptionExample.AggregateExceptionTest()
+
+Process finished with exit code 0.
+````

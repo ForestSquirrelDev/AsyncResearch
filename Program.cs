@@ -5,8 +5,8 @@ namespace AsyncResearch
     public class Program
     {
         public static async Task Main(string[] args)
-        {
-            AggregateExceptionExample.AggregateExceptionTest();
+        { 
+            await TaskWhenAllExample.WhenAllExceptionsExample();
         }
     }
 }

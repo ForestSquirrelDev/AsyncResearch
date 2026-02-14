@@ -10,7 +10,7 @@
             }
             catch (AggregateException ex)
             {
-                Console.WriteLine(ex.Flatten());
+                Console.WriteLine(ex);
             }
         }
 
