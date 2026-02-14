@@ -7,7 +7,7 @@ namespace AsyncResearch
     {
         public static async Task Main(string[] args)
         {
-            await AsyncVoidNestedException.AsyncVoidExceptionTest();
+            await TcsException.TcsExceptionTest();
         }
     }
 }

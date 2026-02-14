@@ -176,3 +176,15 @@ Process finished with exit code -532,462,766.
 ````
 
 Таким образом, мы потеряли всю цепочку вызовов, и увидели только сам метод, в котором было выброшено исключение.
+
+Аналогичная утрата произойдёт, и если у нас есть предоставленный SynchronizationContext, и `async void` сделает `Post(exception)` в него. Просто стактрейс будет начинаться не с ThreadPool,
+а с контекста синхронизации:
+````
+Unhandled exception. System.Exception: HORY SHIET!
+   at AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace.Source.AsyncVoidSynchronizationContextException.Layer4()
+   at System.Threading.Tasks.Task.<>c.<ThrowAsync>b__128_0(Object state)
+   at AsyncResearch.AsyncExperiments.Chapter_3_SynchronizationContext.Source.SimpleManualContext.ExecuteTasks()
+   at AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace.Source.AsyncVoidSynchronizationContextException.AsyncVoidExceptionTest()
+   at AsyncResearch.Program.Main(String[] args)
+   at AsyncResearch.Program.<Main>(String[] args)
+````
