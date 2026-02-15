@@ -6,7 +6,7 @@ namespace AsyncResearch
     {
         public static async Task Main(string[] args)
         { 
-            await FixedWhenAnyLeakExample.RunFixedWhenAnyLeakExample();
+            await FixedSystemTimerExample.RunFixedSystemTimerExample();
         }
     }
 }
