@@ -1,4 +1,4 @@
-﻿using AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace.Source;
+﻿using AsyncResearch.AsyncExperiments.Chapter_6_AsyncAndGarbageCollector.Source;
 
 namespace AsyncResearch
 {
@@ -6,12 +6,7 @@ namespace AsyncResearch
     {
         public static async Task Main(string[] args)
         { 
-            await ThrowExExample.RunThrowExExample();
-        }
-
-        private static async Task MyAsyncMethod()
-        {
-            Console.WriteLine("MyAsyncMethod");
+            await AsyncSurvivorExample.RunAsyncSurvivorExample();
         }
     }
 }
