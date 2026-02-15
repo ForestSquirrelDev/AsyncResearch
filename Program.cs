@@ -1,4 +1,4 @@
-﻿using AsyncResearch.AsyncExperiments.Chapter_6_AsyncAndGarbageCollector.Source;
+﻿using AsyncResearch.AsyncExperiments.Chapter_6_AsyncGcSurvivor.Source;
 
 namespace AsyncResearch
 {
@@ -6,7 +6,7 @@ namespace AsyncResearch
     {
         public static async Task Main(string[] args)
         { 
-            await AsyncSurvivorExample.RunAsyncSurvivorExample();
+            await WhenAnyLeakExample.RunWhenAnyLeakExample();
         }
     }
 }
