@@ -8,5 +8,10 @@ namespace AsyncResearch
         { 
             await ThrowExExample.RunThrowExExample();
         }
+
+        private static async Task MyAsyncMethod()
+        {
+            Console.WriteLine("MyAsyncMethod");
+        }
     }
 }

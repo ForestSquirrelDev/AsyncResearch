@@ -107,7 +107,6 @@ _builder.SetResult(); // AsyncVoidMethodBuilder.cs, CS: 99
 SynchronizationContext? context = _synchronizationContext; AsyncVoidMethodBuilder.cs, CS: 123
 if (context != null)
 {
-    // and decrement its outstanding operation count.
     try
     {
         Task.ThrowAsync(exception, targetContext: context);
