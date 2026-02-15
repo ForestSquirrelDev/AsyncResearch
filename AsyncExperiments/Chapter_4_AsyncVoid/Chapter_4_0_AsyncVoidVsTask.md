@@ -104,7 +104,7 @@ _builder.SetResult(); // AsyncVoidMethodBuilder.cs, CS: 99
 
 `AsyncVoidMethodBuilder` сразу пытается выбросить исключение: и делает он это, в зависимости от наличия `SynchronizationContext`- либо прямо в контекст:
 ````csharp
-SynchronizationContext? context = _synchronizationContext; AsyncVoidMethodBuilder.cs, CS: 123
+SynchronizationContext? context = _synchronizationContext; // AsyncVoidMethodBuilder.cs, CS: 123
 if (context != null)
 {
     try

@@ -241,15 +241,81 @@ if (context != null)
 ThreadPool.QueueUserWorkItem(static state => ((ExceptionDispatchInfo)state!).Throw(), edi); // Task.cs, CS: 1929
 ...
 ````
+4. И самое очевидное отличие - `async void` метод нельзя подождать, ведь для ожидания нужно получить `TaskAwaiter` (или кастомную структуру ожидания, если реализуется кастомный `AsyncBuilder`),
+а `void` авейтер не вернёт.
+
 Получается, что `async void` - это хитрое переиспользование `Task`, только с сигнатурой `void`, и более агрессивным выбросом исключений.
 
-A:
-Q: Цепочка вызовов из 10 async методов лишь с одним ожиданием, кладёт в кучу 10 стейт машин боксов?
-A:
-Q: "Where (in what context) does the state machine for an async void task get created, and why is it the 'Hand Grenade' of C#?"
-A:
-Q: Почему говорят, что "исключение в async void может крашнуть приложение (хочется спросить а что, может и не крашнуть?)))", и почему в контексте Unity, вообще-то, не произойдёт?
-A:
+#### ❔Вопрос 12: Цепочка вызовов из 10 `async` методов лишь с одним ожиданием, создаёт 10 тасок и кладёт в кучу 10 `AsyncStateMachineBox`?
+
+📖Ответ: Да. Если цепочка вызовов доходит до момента, где операция не завершена синхронно (т.е. вызывается `builder.AwaitUnsafeOnCompleted(...)`), 
+рантайму приходится сохранять состояние стека в куче.
+
+Рантайм создаст 10 объектов `AsyncStateMachineBox<TStateMachine>`:
+````csharp
+private class AsyncStateMachineBox<TStateMachine> : // AsyncTaskMethodBuilderT.cs, CS: 275
+    Task<TResult>, IAsyncStateMachineBox
+    where TStateMachine : IAsyncStateMachine
+...
+````
+Каждый такой объект является одновременно и контейнером для стейт-машины (ее полей и переменных), и самим объектом `Task`, так как он наследуется от `Task<TResult>`.
+
+#### ❔Вопрос 13: Почему говорят, что "исключение в async void может крашнуть приложение (хочется спросить: а что, может и не крашнуть?😊)"?
+
+📖Ответ: `AsyncVoidMethodBuilder`, в условиях отсутствия контекста синхронизации, выбросит исключение прямо в `ThreadPool`:
+````csharp
+...
+ThreadPool.QueueUserWorkItem(static state => ((ExceptionDispatchInfo)state!).Throw(), edi); // Task.cs, CS: 1929
+...
+````
+Как пишут сами разработчики .NET, `This will result in a crash unless legacy exception behavior is enabled by a config file or a CLR host.`
+Рантайм убьёт весь процесс. Причём ремарка про _legacy exception behavior_ здесь не просто так: раньше .NET работал ровно наоборот - ну упало исключение в `ThreadPool` и упало,
+"бог бы с ним". 
+
+Но такое поведение приводило к непредсказуемым последствиям: в [статье](https://learn.microsoft.com/en-us/archive/msdn-magazine/2005/july/unhandled-exceptions-and-tracing-in-the-net-framework-2-0)
+разработчик .NET Джон Роббинс рассказывает, как было "до" и "после". До .NET Framework 2.0, потоки могли тихо умирать один за другим, и это невозможно было заметить:
+процесс деградировал, а сообщений об ошибках не было.
+
+Поэтому переход к политике "fail fast", когда CLR убивает всё приложение с `UnhandledException` - это _"mandatory upgrade"_.
+
+#### ❔Вопрос 13.1: почему в Unity исключение в `async void` не крашнет приложение, как предвещают разработчики .NET?
+
+📖Ответ: Unity предоставляет собственный контекст синхронизации `UnitySynchronizationContext`. А при наличии контекста синхронизации, `AsyncVoidMethodBuilder` положит исключение туда, 
+а не в `ThreadPool`:
+````csharp
+SynchronizationContext? context = _synchronizationContext; // AsyncVoidMethodBuilder.cs, CS: 123
+if (context != null)
+{
+    try
+    {
+        Task.ThrowAsync(exception, targetContext: context);
+    }
+    finally
+    {
+        NotifySynchronizationContextOfCompletion(context);
+    }
+}
+````
+В итоге исключение попадёт в метод `Post()` класса `UnitySynchronizationContext`:
+````csharp
+public override void Post(SendOrPostCallback callback, object state) // UnitySynchronizationContext.cs, CS: 59
+{
+  lock (this.m_AsyncWorkQueue)
+    this.m_AsyncWorkQueue.Add(new UnitySynchronizationContext.WorkRequest(callback, state));
+}
+````
+И выбросится тогда, когда `PlayerLoop` в C++ части движка в следующий раз начнёт разбирать очередь запланированных задач:
+````csharp
+[RequiredByNativeCode]
+private static void ExecuteTasks() // UnitySynchronizationContext.cs, CS: 94
+{
+  if (!(SynchronizationContext.Current is UnitySynchronizationContext current))
+    return;
+  current.Exec();
+}
+````
+Таким образом, исключение в `async void` в контексте движка `Unity` положит не весь процесс, а лишь конкретную итерацию `PlayerLoop`.
+
 Что, если MoveNext стейт машины никогда не вызовут? Она навсегда останется лежать в управляемой куче?
 A:
 В какой момент AsyncStateMachineBox удаляется из кучи, когда MoveNext вызвали? 
