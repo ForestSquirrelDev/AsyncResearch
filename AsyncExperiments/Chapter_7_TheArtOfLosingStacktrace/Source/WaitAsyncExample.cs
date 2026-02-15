@@ -19,7 +19,7 @@
 
         private static async Task DoHeavyWorkAsync()
         {
-            await Task.Delay(1000); // Она работает 1 секунду
+            await Task.Delay(1000);
             throw new InvalidOperationException("OH MY GOD!");
         }
     }
