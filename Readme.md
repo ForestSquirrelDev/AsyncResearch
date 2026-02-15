@@ -204,7 +204,7 @@ _builder.SetResult(); // AsyncVoidMethodBuilder.cs, CS: 99
 3. `SetException()`. В отличие от `AsyncTaskMethodBuilder`, `AsyncVoidMethodBuilder` не сохраняет исключение внутрь `Task`, чтобы вызывающий сам решил, как и когда ему обрабатывать
 (или не обрабатывать) лежащее там исключение. `AsyncVoidMethodBuilder` сразу пытается выбросить исключение: и делает он это, в зависимости от наличия `SynchronizationContext`- либо прямо в контекст:
 ````csharp
-SynchronizationContext? context = _synchronizationContext; AsyncVoidMethodBuilder.cs, CS: 123
+SynchronizationContext? context = _synchronizationContext; // AsyncVoidMethodBuilder.cs, CS: 123
 if (context != null)
 {
     try
