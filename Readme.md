@@ -5,7 +5,7 @@
 
 ## Список глав:
 
-### 🏗️ Chapter 1 - Архитектура: "Event-based"
+### 🏗️ [Chapter 1 - Архитектура: "Event-based"](./Chapter_1_HeartOfTheStateMachine)
 
 О том, что такое асинхронность в C# - почему это хитрая событийная система.
 
