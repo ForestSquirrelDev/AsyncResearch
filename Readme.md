@@ -9,32 +9,32 @@
 
 О том, что такое асинхронность в C# - почему это хитрая событийная система.
 
-### 🛡️ Chapter 2 - Исключения и EDI
+### 🛡️ [Chapter 2 - Исключения и EDI](./Chapter_2_AnatomyOfCrash)
 
 - О том, как стактрейс сохраняется при прыжках между потоками: `ExceptionDispatchInfo` (EDI). Рантайм делает "снимок" стека (`DeepCopy` в массив байтов) и восстанавливает его при каждом `Throw()`.
 - `UnobservedTaskException`: Исключения в "забытых" задачах всплывают только при сборке мусора (через `Finalizer`), не роняя процесс.
 
-### 🔄 Chapter 3 - SynchronizationContext: Порядок в хаосе
+### 🔄 [Chapter 3 - SynchronizationContext: Порядок в хаосе](./Chapter_3_SynchronizationContext)
 
 Разбор работы `UnitySynchronizationContext` и кастомной реализации контекста синхронизации.
 
-### ⚠️ Chapter 4 - Async Void: "Ручная граната"
+### ⚠️ [Chapter 4 - Async Void: "Ручная граната"](./Chapter_4_AsyncVoid)
 
 Разбираются отличия `async void` от `async Task`.
 
-### 🛠️ Chapter 5 - Instruments
+### 🛠️ [Chapter 5 - Instruments](./Chapter_5_Instruments)
 
 О том, какие инструменты C# даёт нам для более тонкой настройки асинхронности.
 
-### 🛑 Chapter 6 - Memory Leaks
+### 🛑 [Chapter 6 - Memory Leaks](./Chapter_6_AsyncGcSurvivor)
 
 О том, в каких случаях стейт-машина может навсегда остаться в управляемой куче.
 
-### 🕵️‍♂️ Chapter 7 - The Art Of Losing Stacktrace
+### 🕵️‍♂️ [Chapter 7 - The Art Of Losing Stacktrace](./Chapter_7_TheArtOfLosingStacktrace)
 
 Об изощрённых и не очень способах потерять оригинальный стактрейс исключения, или всё исключение целиком.
 
-### 💰 Chapter 8 - Прейскурант асинхронности (Memory Benchmarks)
+### 💰 [Chapter 8 - Прейскурант асинхронности (Memory Benchmarks)](./Chapter_8_Benchmarks)
 
 Результаты замеров на x64 .NET 8 показывают цену асинхронных операций.
 
