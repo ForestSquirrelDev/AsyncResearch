@@ -6,7 +6,7 @@ namespace AsyncResearch
     {
         public static async Task Main(string[] args)
         { 
-            await HeavyWorkCancellationTokenExample.RunHeavyWorkCancellationTokenExample();
+            await TaskRunExample.RunTaskRunExample();
         }
     }
 }
