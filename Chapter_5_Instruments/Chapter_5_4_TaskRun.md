@@ -10,6 +10,12 @@ public static async Task RunTaskRunExample()
 ````
 Когда мы вызовем `Task.Run()`, произойдёт следующее. Рантайм создаст `Task` и прокинет туда наш делегат:
 ````csharp
+public static Task Run(Action action) // Task.cs, CS: 5427
+{
+    return InternalStartNew(null, action, null, default, TaskScheduler.Default,
+        TaskCreationOptions.DenyChildAttach, InternalTaskOptions.None);
+}
+...
 internal static Task InternalStartNew( // Task.cs, CS: 1144
     Task? creatingTask, Delegate action, object? state, CancellationToken cancellationToken, TaskScheduler scheduler,
     TaskCreationOptions options, InternalTaskOptions internalOptions)
