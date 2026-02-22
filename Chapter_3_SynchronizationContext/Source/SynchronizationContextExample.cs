@@ -1,4 +1,4 @@
-﻿namespace AsyncResearch.AsyncExperiments.Chapter_3_SynchronizationContext.Source
+﻿namespace AsyncResearch.Chapter_3_SynchronizationContext.Source
 {
     public static class SynchronizationContextExample
     {

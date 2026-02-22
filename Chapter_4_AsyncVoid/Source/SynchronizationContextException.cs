@@ -1,6 +1,6 @@
-﻿using AsyncResearch.AsyncExperiments.Chapter_3_SynchronizationContext.Source;
+﻿using AsyncResearch.Chapter_3_SynchronizationContext.Source;
 
-namespace AsyncResearch.AsyncExperiments.Chapter_4_AsyncVoid.Source
+namespace AsyncResearch.Chapter_4_AsyncVoid.Source
 {
     public static class SynchronizationContextException
     {

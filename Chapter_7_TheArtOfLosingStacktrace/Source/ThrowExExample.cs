@@ -1,6 +1,6 @@
 ﻿using System.Runtime.ExceptionServices;
 
-namespace AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace.Source
+namespace AsyncResearch.Chapter_7_TheArtOfLosingStacktrace.Source
 {
     public static class ThrowExExample
     {

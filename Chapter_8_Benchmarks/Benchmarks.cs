@@ -1,6 +1,6 @@
 ﻿using BenchmarkDotNet.Attributes;
 
-namespace AsyncResearch.AsyncExperiments.Chapter_8_Benchmarks
+namespace AsyncResearch.Chapter_8_Benchmarks
 {
     [MemoryDiagnoser]
     public class StateMachineSizeBenchmark

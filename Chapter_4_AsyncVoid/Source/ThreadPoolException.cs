@@ -1,4 +1,4 @@
-﻿namespace AsyncResearch.AsyncExperiments.Chapter_4_AsyncVoid.Source
+﻿namespace AsyncResearch.Chapter_4_AsyncVoid.Source
 {
     public class ThreadPoolException
     {

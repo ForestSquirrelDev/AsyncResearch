@@ -1,4 +1,4 @@
-﻿using AsyncResearch.AsyncExperiments.Chapter_6_AsyncGcSurvivor.Source;
+﻿using AsyncResearch.Chapter_6_AsyncGcSurvivor.Source;
 
 namespace AsyncResearch
 {

@@ -1,4 +1,4 @@
-﻿namespace AsyncResearch.AsyncExperiments.Chapter_6_AsyncAndGarbageCollector.Source
+﻿namespace AsyncResearch.Chapter_6_AsyncGcSurvivor.Source
 {
     public static class AsyncSurvivorExample
     {

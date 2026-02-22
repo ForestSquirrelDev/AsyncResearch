@@ -1,4 +1,4 @@
-namespace AsyncResearch.AsyncExperiments.Chapter_1_HeartOfTheStateMachine.Source
+namespace AsyncResearch.Chapter_1_HeartOfTheStateMachine.Source
 {
     public static class ContinuationExample
     {

@@ -1,6 +1,6 @@
-﻿using AsyncResearch.AsyncExperiments.Chapter_3_SynchronizationContext.Source;
+﻿using AsyncResearch.Chapter_3_SynchronizationContext.Source;
 
-namespace AsyncResearch.AsyncExperiments.Chapter_7_TheArtOfLosingStacktrace.Source
+namespace AsyncResearch.Chapter_7_TheArtOfLosingStacktrace.Source
 {
     public static class AsyncVoidSynchronizationContextException
     {
