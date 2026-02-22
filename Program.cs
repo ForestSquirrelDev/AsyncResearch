@@ -1,4 +1,4 @@
-﻿using AsyncResearch.Chapter_6_AsyncGcSurvivor.Source;
+﻿using AsyncResearch.Chapter_5_Instruments.Source;
 
 namespace AsyncResearch
 {
@@ -6,7 +6,7 @@ namespace AsyncResearch
     {
         public static async Task Main(string[] args)
         { 
-            await FixedSystemTimerExample.RunFixedSystemTimerExample();
+            await TaskDelayCancellationTokenExample.RunTaskDelayCancellationTokenExample();
         }
     }
 }
