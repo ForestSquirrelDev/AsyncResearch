@@ -10,7 +10,6 @@
             {
                 var t = OptimizedDoWork();
                 await t;
-                await t;
             }
         }
 
