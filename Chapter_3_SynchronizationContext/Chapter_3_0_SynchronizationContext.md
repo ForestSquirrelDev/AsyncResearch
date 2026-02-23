@@ -52,7 +52,7 @@ Cами разработчики .NET в комментарии здесь и н
 
 Мы не модифицировали `TaskScheduler`, но `SynchronizationContext` у нас как раз будет кастомный, поэтому мы попадём в данную ветвь и создадим `SynchronizationContextAwaitTaskContinuation`:
 ````csharp
-if (SynchronizationContext.Current is SynchronizationContext syncCtx && syncCtx.GetType() != typeof(SynchronizationContext))
+if (SynchronizationContext.Current is SynchronizationContext syncCtx && syncCtx.GetType() != typeof(SynchronizationContext)) // Task.cs, CS: 2577
 {
     tc = new SynchronizationContextAwaitTaskContinuation(syncCtx, stateMachineBox.MoveNextAction, flowExecutionContext: false);
     goto HaveTaskContinuation;
