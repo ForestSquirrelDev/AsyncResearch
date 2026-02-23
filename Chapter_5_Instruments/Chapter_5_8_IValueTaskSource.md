@@ -93,7 +93,7 @@ Process finished with exit code 0.
 
 Мы синхронно отправили 10000 пакетов, и синхронно их прочитали. Аллокаций не произошло. 
 
-Когда мы вызываем `ReceiveAsync()`, происходит следующее. Мы берём кэшированный `_singleBufferReceiveEventArgs`:
+Когда мы вызываем `ReceiveAsync()`, происходит следующее. Мы берём кэшированный `_singleBufferReceiveEventArgs` - объект, наследующийся от `IValueTaskSource`:
 ````csharp
   internal ValueTask<int> ReceiveAsync( // Socket.cs, CS: 4943
     Memory<byte> buffer,
@@ -215,7 +215,7 @@ Process finished with exit code 0.
   }
 ````
 
-Таким образом, `Socket` использует `IValueTaskSource` как своего рода awaitable "пул" из одного объекта, который она переиспользует, и сбрасывает при наличии асинхронного ожидания.
+`Socket` использует `AwaitableSocketAsyncEventArgs: IValueTaskSource` как своего рода awaitable "пул" из одного объекта, который он переиспользует, и сбрасывает при наличии асинхронного ожидания.
 Примерно то же самое можно было бы сделать и на неких кастомных пулах или кэшированных объектах, но `IValueTaskSource` - это именно то, что позволяет написать `await` за счёт перегрузки
 `ValueTask`, принимающей `ValueTaskSource`:
 ````csharp
