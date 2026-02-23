@@ -18,19 +18,20 @@ namespace AsyncResearch.Chapter_5_Instruments.Source
             client.NoDelay = true; 
             Console.WriteLine("Сервер: Клиент подключился!");
 
-            var buffer = new byte[1]; // Читаем по одному байту
+            // Читаем по одному байту
+            var buffer = new byte[1];
             var iterations = 10000;
 
             // Прогрев
-            for (var i = 0; i < 100; i++) await client.ReceiveAsync(buffer.AsMemory(), SocketFlags.None);
+            for (var i = 0; i < 100; i++) await client.ReceiveAsync(buffer);
 
             long totalBytes = 0;
             for (var i = 0; i < iterations; i++)
             {
-                GC.TryStartNoGCRegion(1024);
+                GC.TryStartNoGCRegion(1024 * 1024);
                 
                 var bytesBefore = GC.GetAllocatedBytesForCurrentThread();
-                var read = await client.ReceiveAsync(buffer.AsMemory(), SocketFlags.None);
+                var read = await client.ReceiveAsync(buffer, SocketFlags.None);
                 var bytesAfter = GC.GetAllocatedBytesForCurrentThread();
                 totalBytes += Math.Max(bytesAfter - bytesBefore, 0);
                 
@@ -44,7 +45,7 @@ namespace AsyncResearch.Chapter_5_Instruments.Source
 
             Console.WriteLine("\n--- ИТОГ ЗАМЕРА ---");
             Console.WriteLine($"Выделено памяти: {totalBytes} байт");
-            Console.WriteLine($"На одну операцию: {(double)(totalBytes) / iterations} байт");
+            Console.WriteLine($"На одну операцию: {(long)(totalBytes) / iterations} байт");
         }
     }
 }
